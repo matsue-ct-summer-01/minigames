@@ -1,22 +1,30 @@
 require 'gosu'
 
-class PKGame
+###############################
+#          PKgame             #
+###############################
+
+class PKGame #< Gosu::Window ###共有時に無効
   WIDTH  = 640
   HEIGHT = 480
   DIRECTIONS = ["左", "中央", "右"]
 
-  def initialize
-    super(WIDTH, HEIGHT)
-    self.caption = "サッカー PK対決 (アニメーション付き)"
+  def initialize(window)　###共有時に有効
+    #super(WIDTH, HEIGHT) ###共有時に無効
+    self.caption = "サッカー PK対決"
+
+    @haikei_image = Gosu::Image.new("./assets/images//penaltyarea.png")#("PKgame_img/penaltyarea.png") #("./assets/images//penaltyarea.png")
 
     @font = Gosu::Font.new(28)
     @round = 1
     @score = 0
     @message = "←:左 ↑:中央 →:右 でシュート！"
 
+    @ball_image = Gosu::Image.new("./assets/images/soccerball.png")#("PKgame_img/soccerball.png") #("./assets/images/soccerball.png")
+
     # ボールの初期位置
-    @ball_x = WIDTH / 2
-    @ball_y = HEIGHT - 50
+    @ball_x = WIDTH / 2 + 6
+    @ball_y = HEIGHT - 73
     @ball_target_x = @ball_x
     @ball_target_y = 100
     @ball_moving = false
@@ -29,6 +37,12 @@ class PKGame
 
     @result = ""
     @result_score = ""
+
+    @start_button = 0
+
+    @goal_count = 0
+
+    @game_over= false
   end
 
   def self.window_size
@@ -38,14 +52,18 @@ class PKGame
   def update
     # ボール移動アニメーション
     if @ball_moving
-      @ball_x += (@ball_target_x - @ball_x) * 0.2
-      @ball_y += (@ball_target_y - @ball_y) * 0.2
-
+      @ball_x += (@ball_target_x - @ball_x) * 0.2  #ボールのx座標が目的地に向かう
+      @ball_y += (@ball_target_y - @ball_y) * 0.2  #ボールのy座標が目的地に向かう
       # ゴール到達判定
-      if ((@ball_x - @ball_target_x).abs < 1) && ((@ball_y - @ball_target_y).abs < 1)
-        @ball_moving = false
-        judge_result
+      if ((@ball_x - @ball_target_x).abs < 1) && ((@ball_y - @ball_target_y).abs < 1)  #ボールと目的地の距離がすごく近いとき接触
+        @ball_moving = false #if文終了
+        judge_result #メソッド呼び出し
       end
+    end
+
+    #ゲームオーバー
+    if @game_over
+      @parent.on_game_over(@score) # 親のメソッドを呼び出す
     end
 
     # キーパー移動アニメーション
@@ -57,9 +75,10 @@ class PKGame
     end
   end
 
+
   def draw
     #背景
-    #Gosu.draw_rect(0, 0, WIDTH, HEIGHT , Gosu::Color::GREEN, 0)
+    @haikei_image.draw(0, 125, 0, 0.188 , 0.2)
 
     # ゴール枠
     Gosu.draw_rect(WIDTH/2 - 100, 50, 200, 10, Gosu::Color::WHITE, 0)
@@ -85,25 +104,30 @@ class PKGame
     Gosu.draw_rect(@keeper_x + 7, @keeper_y + 24, 15, 8, Gosu::Color::GRAY, 0)
 
     # ボール
-    Gosu.draw_rect(@ball_x - 10, @ball_y - 10, 20, 20, Gosu::Color::YELLOW, 0)
+    @ball_image.draw(@ball_x - 45, @ball_y - 55, 1 , 0.3, 0.3)
+    #@ball_image.draw(10,10,1)
+    #Gosu.draw_rect(@ball_x - 10, @ball_y - 10, 20, 20, Gosu::Color::YELLOW, 0)
 
     # UI
     if @round == 1
-      @font.draw_text("スコア３以上で勝利", WIDTH/2 - 100, HEIGHT/2 , 1)
+      @font.draw_text("３ゴール以上でクリア", WIDTH/2 - 150, HEIGHT/2 , 1,  1.5, 1.5, Gosu::Color::BLACK)
     end
-    
+
     if @round <= 5
       @font.draw_text("ラウンド: #{@round} / 5", 20, 20, 1)
     end
     @font.draw_text("スコア: #{@score}", 20, 60, 1)
-    @font.draw_text("スコア: #{@score}", 20, 100, 1)
-    @font.draw_text(@message, 20, 390, 1)
+    @font.draw_text("ゴール: #{@goal_count}回", 20, 100, 1)
+    @font.draw_text(@message, 20, 330, 1, 1, 1, Gosu::Color::BLACK)
     @font.draw_text(@result, 20, 300, 1, 1, 1, Gosu::Color::RED) unless @result.empty?
-    @font.draw_text(@result_score, WIDTH/2 - 100, HEIGHT/2 , 1) unless @result.empty?
+    @font.draw_text(@result_score, WIDTH/2 - 150, HEIGHT/2 - 50 , 1, 1.5, 1.5, Gosu::Color::RED) unless @result.empty?
+    
+    #@font.draw_text("Enterキーを押して開始", WIDTH/2 - 100, HEIGHT/2 , 1) #unless @start_button=1
+    
   end
 
   def button_down(id)
-    return if @ball_moving #|| @round > 5
+    return if @ball_moving #|| @start_button = 0 #|| @round > 5
     
     if @round > 5 
       result
@@ -116,16 +140,18 @@ class PKGame
     when Gosu::KB_UP    then player_choice = 1
     when Gosu::KB_RIGHT then player_choice = 2
     when Gosu::KB_ESCAPE then close
+    when Gosu::KB_ENTER then @start_button = 1
     end
 
     if player_choice
       # ボールのターゲット座標を決める
+      #@kick_sound.play
       case player_choice
       when 0 then @ball_target_x = WIDTH/2 - 80
       when 1 then @ball_target_x = WIDTH/2
       when 2 then @ball_target_x = WIDTH/2 + 80
       end
-      @ball_target_y = 80
+      @ball_target_y = 110
       @ball_moving = true
 
       # キーパーの飛ぶ方向
@@ -140,15 +166,19 @@ class PKGame
       @player_choice = player_choice
       @message = "シュート中..."
       @result = ""
+
     end
   end
 
   def judge_result
     if @player_choice == @goalkeeper_choice
+      #@catch_sound.play
       @result = "🥅 キーパーが#{DIRECTIONS[@goalkeeper_choice]}へ！セーブされた！"
     else
+      #@goal_sound.play
       @result = "⚽ ゴール！！ #{DIRECTIONS[@player_choice]}に決めた！"
-      @score += 1
+      @score += 3000
+      @goal_count += 1
     end
 
     @round += 1
@@ -159,17 +189,18 @@ class PKGame
     end
 
     # ボール位置をリセット
-    @ball_x = WIDTH / 2
-    @ball_y = HEIGHT - 50
+    @ball_x = WIDTH/2 + 6
+    @ball_y = HEIGHT - 73
   end
 
   def result
-      if @score >= 3
-      @result_score = "スコア #{@score} あなたの勝ち!"
-      else
-      @result_score = "スコア #{@score} あなたの負け!"
-      end
+    if @goal_count >= 3
+      @result_score = "あなたのスコア #{@score} \n      クリア！"
+    else
+      @result_score = "あなたのスコア #{@score} \n  ゲームオーバー"
+      @game_over = true
+    end
   end
 end
 
-PKGame.new.show
+#PKGame.new.show ###共有時に無効
