@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 require 'gosu'
-require_relative './tetris/main'
+require_relative './games/tetris/main'
 #require_relative './breakout/main' # 実際のパスに合わせてください
 
 # ===============================================================
