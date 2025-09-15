@@ -276,3 +276,4 @@ class ShootingGame < Gosu::Window
 
     window = GameWindow.new
     window.show
+end
