@@ -13,6 +13,7 @@ class ShootingGame
   FALL_SPEED = 2.5
   BULLET_SPEED = 8
   PLAYER_SPEED = 5.5
+  PLAYER_SPEED_SHIFT = 3.0
 
   def self.window_size
     { width: WINDOW_WIDTH, height: WINDOW_HEIGHT }
@@ -22,19 +23,27 @@ class ShootingGame
   class Player
     attr_reader :x, :y, :w, :h
     def initialize
-      @w = 36
-      @h = 36
-      @x = WINDOW_WIDTH / 2 - @w / 2
+      @w = 20#自機サイズ
+      @h = 20
+      @x = WINDOW_WIDTH / 2 - @w / 2#初期座標
       @y = WINDOW_HEIGHT - @h - 10
       @cooldown = 0
     end
 
     def update
-      @x -= PLAYER_SPEED if Gosu.button_down?(Gosu::KB_LEFT) || Gosu.button_down?(Gosu::KB_A)
-      @x += PLAYER_SPEED if Gosu.button_down?(Gosu::KB_RIGHT) || Gosu.button_down?(Gosu::KB_D)
-      @y -= PLAYER_SPEED if Gosu.button_down?(Gosu::KB_UP) || Gosu.button_down?(Gosu::KB_W)
-      @y += PLAYER_SPEED if Gosu.button_down?(Gosu::KB_DOWN) || Gosu.button_down?(Gosu::KB_S)
+        if !Gosu.button_down?(Gosu::KB_LEFT_SHIFT)
+            @x -= PLAYER_SPEED if Gosu.button_down?(Gosu::KB_LEFT) || Gosu.button_down?(Gosu::KB_A)
+            @x += PLAYER_SPEED if Gosu.button_down?(Gosu::KB_RIGHT) || Gosu.button_down?(Gosu::KB_D)
+            @y -= PLAYER_SPEED if Gosu.button_down?(Gosu::KB_UP) || Gosu.button_down?(Gosu::KB_W)
+            @y += PLAYER_SPEED if Gosu.button_down?(Gosu::KB_DOWN) || Gosu.button_down?(Gosu::KB_S)
+        elsif Gosu.button_down?(Gosu::KB_LEFT_SHIFT)
+            @x -= PLAYER_SPEED_SHIFT if Gosu.button_down?(Gosu::KB_LEFT) || Gosu.button_down?(Gosu::KB_A)
+            @x += PLAYER_SPEED_SHIFT if Gosu.button_down?(Gosu::KB_RIGHT) || Gosu.button_down?(Gosu::KB_D)
+            @y -= PLAYER_SPEED_SHIFT if Gosu.button_down?(Gosu::KB_UP) || Gosu.button_down?(Gosu::KB_W)
+            @y += PLAYER_SPEED_SHIFT if Gosu.button_down?(Gosu::KB_DOWN) || Gosu.button_down?(Gosu::KB_S)
+        end
 
+      
       @x = [[@x, 0].max, WINDOW_WIDTH - @w].min
       @y = [[@y, 0].max, WINDOW_HEIGHT - @h].min
       @cooldown -= 1 if @cooldown > 0
@@ -83,6 +92,34 @@ class ShootingGame
     def rect; [@x, @y, @w, @h]; end
   end
 
+  # ── EnemyBullet ──
+  class EnemyBullet
+    attr_reader :x, :y, :w, :h
+    SPEED = 2.5
+    def initialize(x, y, angle)
+      @x = x
+      @y = y
+      @angle = angle
+      @w = 6
+      @h = 6
+      @alive = true
+    end
+
+    def update
+      @x += SPEED * Math.cos(@angle)
+      @y += SPEED * Math.sin(@angle)
+      @alive = false if @x < 0 || @x > ShootingGame::WINDOW_WIDTH || @y < 0 || @y > ShootingGame::WINDOW_HEIGHT
+    end
+
+    def draw(window)
+      window.draw_rect(@x, @y, @w, @h, Gosu::Color::RED, 3)
+    end
+
+    def alive?; @alive; end
+    def destroy; @alive = false; end
+    def rect; [@x, @y, @w, @h]; end
+  end
+
   # ── Block ──
   class Block
     attr_accessor :col, :row, :x, :y, :size
@@ -96,22 +133,34 @@ class ShootingGame
       @falling = falling
       @alive = true
       @color = random_color
-      # ランダム落下速度
-      @fall_speed = FALL_SPEED * rand(0.7..1.5)
+      @fall_speed = FALL_SPEED * rand(0.5..2.0)
+      @shoot_cooldown = rand(60..180)
     end
 
-    def update(landed_heights, landed_blocks)
-      return unless @falling
-      target_bottom = WINDOW_HEIGHT - landed_heights[@col]
+    def update(landed_heights, landed_blocks, enemy_bullets)
+      # 落下処理
+      if @falling
+        target_bottom = ShootingGame::WINDOW_HEIGHT - landed_heights[@col]
+        if @y + @size + @fall_speed >= target_bottom
+          @y = target_bottom - @size
+          @falling = false
+          @row = landed_heights[@col] / BLOCK_SIZE
+          landed_blocks[@col] << self
+          landed_heights[@col] += BLOCK_SIZE
+        else
+          @y += @fall_speed
+        end
+      end
 
-      if @y + @size + @fall_speed >= target_bottom
-        @y = target_bottom - @size
-        @falling = false
-        @row = landed_heights[@col] / BLOCK_SIZE
-        landed_blocks[@col] << self
-        landed_heights[@col] += BLOCK_SIZE
-      else
-        @y += @fall_speed
+      # 全方位弾
+      @shoot_cooldown -= 1
+      if @shoot_cooldown <= 0
+        shots = 16
+        shots.times do |i|
+          angle = 2 * Math::PI * i / shots
+          enemy_bullets << EnemyBullet.new(@x + @size / 2, @y + @size / 2, angle)
+        end
+        @shoot_cooldown = rand(120..240)
       end
     end
 
@@ -134,6 +183,7 @@ class ShootingGame
     @window = window
     @player = Player.new
     @bullets = []
+    @enemy_bullets = []
     @falling_blocks = []
     @landed_blocks = Array.new(COLUMNS) { [] }
     @landed_heights = Array.new(COLUMNS, 0)
@@ -146,7 +196,7 @@ class ShootingGame
     return if @game_over
 
     @player.update
-    if Gosu.button_down?(Gosu::KB_SPACE)
+    if Gosu.button_down?(Gosu::KB_Z)
       b = @player.shoot
       @bullets << b if b
     end
@@ -161,24 +211,27 @@ class ShootingGame
       @spawn_timer = 0
     end
 
-    @falling_blocks.each { |blk| blk.update(@landed_heights, @landed_blocks) }
+    @falling_blocks.each { |blk| blk.update(@landed_heights, @landed_blocks, @enemy_bullets) }
     @falling_blocks.reject! { |blk| !blk.falling }
 
+    # プレイヤー弾とブロック
     @bullets.each do |b|
       (@falling_blocks + @landed_blocks.flatten).each do |blk|
         next unless blk.alive?
         if collide_rect?(b.rect, blk.rect)
           blk.destroy
           b.destroy
-          @score += 100
+          @score += 100*FALL_SPEED
         end
       end
     end
 
-    @falling_blocks.reject! { |b| !b.alive? }
-    COLUMNS.times { |c| @landed_blocks[c].reject! { |b| !b.alive? } }
+    # 敵弾
+    @enemy_bullets.each(&:update)
+    @enemy_bullets.reject! { |b| !b.alive? }
 
-    @game_over = true if check_player_collision_with_blocks
+    # 衝突判定
+    @game_over = true if check_player_collision_with_blocks || check_player_collision_with_enemy_bullets
   end
 
   def draw
@@ -193,6 +246,7 @@ class ShootingGame
     @landed_blocks.each { |col| col.each { |blk| blk.draw(window) } }
     @falling_blocks.each { |blk| blk.draw(window) }
     @bullets.each { |b| b.draw(window) }
+    @enemy_bullets.each { |b| b.draw(window) }
     @player.draw(window)
 
     font = Gosu::Font.new(20)
@@ -222,5 +276,10 @@ class ShootingGame
     (@falling_blocks + @landed_blocks.flatten).any? do |blk|
       blk.alive? && collide_rect?([px, py, pw, ph], blk.rect)
     end
+  end
+
+  def check_player_collision_with_enemy_bullets
+    px, py, pw, ph = @player.rect
+    @enemy_bullets.any? { |b| collide_rect?([px, py, pw, ph], b.rect) }
   end
 end

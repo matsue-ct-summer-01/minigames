@@ -2,7 +2,7 @@
 require 'gosu'
 require_relative './games/tetris/main'
 require_relative './games/shooting/main'
-require_relative './games/uno/main'
+#require_relative './games/uno/main'
 
 #require_relative './breakout/main' # 実際のパスに合わせてください
 
@@ -28,7 +28,7 @@ class GameManager < Gosu::Window
     @game_classes = {
       tetris: TetrisGame,
       shooting: ShootingGame,
-      uno: UnoGame,
+      #uno: UnoGame,
       #breakout: BreakoutGame
     }
 
@@ -97,10 +97,10 @@ class GameManager < Gosu::Window
         @current_game_key = :shooting
         puts 'Switched to Shooting.'
 
-      when Gosu::KB_U
-      # Uキーでunoを選択
-      @current_game_key = :uno
-      puts 'Switched to UNO.'
+      # when Gosu::KB_U
+      # # Uキーでunoを選択
+      # @current_game_key = :uno
+      # puts 'Switched to UNO.'
       end
     end
   end
