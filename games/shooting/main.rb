@@ -7,14 +7,13 @@ class ShootingGame
   WINDOW_WIDTH  = 640
   WINDOW_HEIGHT = 480
 
-  BLOCK_SIZE = 64
+  BLOCK_SIZE = 80
   COLUMNS = WINDOW_WIDTH / BLOCK_SIZE
   SPAWN_INTERVAL = 60
   FALL_SPEED = 2.5
   BULLET_SPEED = 8
   PLAYER_SPEED = 5.5
 
-  # クラスメソッドでウィンドウサイズを返す
   def self.window_size
     { width: WINDOW_WIDTH, height: WINDOW_HEIGHT }
   end
@@ -31,18 +30,10 @@ class ShootingGame
     end
 
     def update
-      if Gosu.button_down?(Gosu::KB_LEFT) || Gosu.button_down?(Gosu::KB_A)
-        @x -= PLAYER_SPEED
-      end
-      if Gosu.button_down?(Gosu::KB_RIGHT) || Gosu.button_down?(Gosu::KB_D)
-        @x += PLAYER_SPEED
-      end
-      if Gosu.button_down?(Gosu::KB_UP) || Gosu.button_down?(Gosu::KB_W)
-        @y -= PLAYER_SPEED
-      end
-      if Gosu.button_down?(Gosu::KB_DOWN) || Gosu.button_down?(Gosu::KB_S)
-        @y += PLAYER_SPEED
-      end
+      @x -= PLAYER_SPEED if Gosu.button_down?(Gosu::KB_LEFT) || Gosu.button_down?(Gosu::KB_A)
+      @x += PLAYER_SPEED if Gosu.button_down?(Gosu::KB_RIGHT) || Gosu.button_down?(Gosu::KB_D)
+      @y -= PLAYER_SPEED if Gosu.button_down?(Gosu::KB_UP) || Gosu.button_down?(Gosu::KB_W)
+      @y += PLAYER_SPEED if Gosu.button_down?(Gosu::KB_DOWN) || Gosu.button_down?(Gosu::KB_S)
 
       @x = [[@x, 0].max, WINDOW_WIDTH - @w].min
       @y = [[@y, 0].max, WINDOW_HEIGHT - @h].min
@@ -96,6 +87,7 @@ class ShootingGame
   class Block
     attr_accessor :col, :row, :x, :y, :size
     attr_reader :falling, :alive
+
     def initialize(col, y, falling = true)
       @col = col
       @size = BLOCK_SIZE
@@ -104,20 +96,22 @@ class ShootingGame
       @falling = falling
       @alive = true
       @color = random_color
+      # ランダム落下速度
+      @fall_speed = FALL_SPEED * rand(0.7..1.5)
     end
 
     def update(landed_heights, landed_blocks)
       return unless @falling
       target_bottom = WINDOW_HEIGHT - landed_heights[@col]
 
-      if @y + @size + FALL_SPEED >= target_bottom
+      if @y + @size + @fall_speed >= target_bottom
         @y = target_bottom - @size
         @falling = false
         @row = landed_heights[@col] / BLOCK_SIZE
         landed_blocks[@col] << self
         landed_heights[@col] += BLOCK_SIZE
       else
-        @y += FALL_SPEED
+        @y += @fall_speed
       end
     end
 
@@ -135,7 +129,7 @@ class ShootingGame
     end
   end
 
-  # ── ShootingGame インスタンス（Window に依存しない管理用） ──
+  # ── ShootingGame インスタンス ──
   def initialize(window)
     @window = window
     @player = Player.new
