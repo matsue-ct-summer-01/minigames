@@ -8,7 +8,7 @@ require 'gosu'
 class TetrisGame
   # --- 1. 定数とテトリミノの定義 ---
   module ZOrder
-    BACKGROUND, BOARD, TETROMINO, UI = *0..3
+    BACKGROUND,  TETROMINO,BOARD, UI = *0..3
   end
 
   TETROMINOES = {
