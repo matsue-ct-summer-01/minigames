@@ -1,0 +1,83 @@
+<svg width="320" height="320" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg" style="image-rendering: pixelated; image-rendering: -moz-crisp-edges; image-rendering: crisp-edges;">
+  <!-- 後光（オーラ）-->
+  <rect x="13" y="0" width="6" height="1" fill="#FFD700"/>
+  <rect x="11" y="1" width="10" height="1" fill="#FFD700"/>
+  <rect x="9" y="2" width="14" height="1" fill="#FFFF99"/>
+  
+  <!-- 髪 -->
+  <rect x="10" y="3" width="12" height="3" fill="#8B4513"/>
+  <rect x="8" y="6" width="16" height="2" fill="#8B4513"/>
+  
+  <!-- 顔 -->
+  <rect x="10" y="8" width="12" height="6" fill="#F4C2A1"/>
+  
+  <!-- 困惑した目 -->
+  <rect x="12" y="9" width="2" height="2" fill="#4169E1"/>
+  <rect x="18" y="9" width="2" height="2" fill="#4169E1"/>
+  <rect x="13" y="10" width="1" height="1" fill="#FFFFFF"/>
+  <rect x="19" y="10" width="1" height="1" fill="#FFFFFF"/>
+  
+  <!-- 眉毛（困った表情）-->
+  <rect x="11" y="8" width="3" height="1" fill="#654321"/>
+  <rect x="18" y="8" width="3" height="1" fill="#654321"/>
+  
+  <!-- 鼻 -->
+  <rect x="15" y="11" width="2" height="1" fill="#E6A85C"/>
+  
+  <!-- 口（不安そう）-->
+  <rect x="14" y="13" width="4" height="1" fill="#D2691E"/>
+  <rect x="15" y="12" width="2" height="1" fill="#D2691E"/>
+  
+  <!-- 白い天使の服 -->
+  <rect x="9" y="14" width="14" height="10" fill="#FFFFFF"/>
+  
+  <!-- 金の装飾 -->
+  <rect x="8" y="14" width="16" height="1" fill="#FFD700"/>
+  <rect x="13" y="15" width="6" height="1" fill="#FFD700"/>
+  
+  <!-- 腕 -->
+  <rect x="5" y="16" width="4" height="8" fill="#FFFFFF"/>
+  <rect x="23" y="16" width="4" height="8" fill="#FFFFFF"/>
+  
+  <!-- 手 -->
+  <rect x="3" y="22" width="3" height="3" fill="#F4C2A1"/>
+  <rect x="26" y="22" width="3" height="3" fill="#F4C2A1"/>
+  
+  <!-- 脚部分（ローブ風）-->
+  <rect x="10" y="24" width="12" height="6" fill="#FFFFFF"/>
+  <rect x="8" y="26" width="16" height="4" fill="#FFFFFF"/>
+  
+  <!-- 足元（雲っぽい）-->
+  <rect x="9" y="30" width="14" height="2" fill="#F0F8FF"/>
+  <rect x="7" y="31" width="18" height="1" fill="#E6E6FA"/>
+  
+  <!-- 天使の羽（小さめ、背後から見える）-->
+  <rect x="6" y="15" width="2" height="4" fill="#F8F8FF"/>
+  <rect x="4" y="16" width="2" height="3" fill="#F8F8FF"/>
+  <rect x="24" y="15" width="2" height="4" fill="#F8F8FF"/>
+  <rect x="26" y="16" width="2" height="3" fill="#F8F8FF"/>
+  
+  <!-- 羽の影 -->
+  <rect x="5" y="17" width="1" height="2" fill="#E0E0E0"/>
+  <rect x="26" y="17" width="1" height="2" fill="#E0E0E0"/>
+  
+  <!-- ベルト -->
+  <rect x="9" y="20" width="14" height="2" fill="#DAA520"/>
+  
+  <!-- 胸元の十字 -->
+  <rect x="15" y="16" width="2" height="4" fill="#FFD700"/>
+  <rect x="14" y="17" width="4" height="2" fill="#FFD700"/>
+  
+  <!-- 頭上の天使の輪 -->
+  <rect x="12" y="2" width="8" height="1" fill="#FFD700"/>
+  <rect x="11" y="3" width="2" height="1" fill="#FFD700"/>
+  <rect x="19" y="3" width="2" height="1" fill="#FFD700"/>
+  
+  <!-- 汗（緊張）-->
+  <rect x="9" y="9" width="1" height="2" fill="#87CEEB"/>
+  <rect x="8" y="10" width="1" height="1" fill="#87CEEB"/>
+  
+  <!-- 袖の装飾 -->
+  <rect x="5" y="18" width="4" height="1" fill="#FFD700"/>
+  <rect x="23" y="18" width="4" height="1" fill="#FFD700"/>
+</svg>
