@@ -18,8 +18,16 @@ TETROMINOES = {
 
 # --- 2. ゲームウィンドウクラス ---
 class TetrisGame < Gosu::Window
+
+
+
+  def self.window_size
+    { width: 300, height: 480 }
+  end
+
+
   def initialize
-    super 300, 600
+    super 300,600
     self.caption = "テトリス"
 
     @block_size = 30
