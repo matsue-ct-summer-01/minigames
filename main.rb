@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 require 'gosu'
 require_relative './games/tetris/main'
+require_relative './games/shooting/main'
+
 #require_relative './breakout/main' # 実際のパスに合わせてください
 
 # ===============================================================
@@ -24,6 +26,7 @@ class GameManager < Gosu::Window
     # ゲームのクラス（設計図）をハッシュに格納しておく
     @game_classes = {
       tetris: TetrisGame,
+      shooting: ShootingGame,
       #breakout: BreakoutGame
     }
 
@@ -86,6 +89,11 @@ class GameManager < Gosu::Window
         # Bキーでブレイクアウトを選択
         @current_game_key = :breakout
         puts 'Switched to Breakout.'
+
+      when Gosu::KB_S
+        # Sキーでシューティングを選択
+        @current_game_key = :shooting
+        puts 'Switched to Shooting.'
       end
     end
   end
