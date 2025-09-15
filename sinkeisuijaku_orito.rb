@@ -48,7 +48,7 @@ end
 class MemoryGame < Gosu::Window
   def initialize
     super(640, 480)
-    self.caption = "神経衰弱 (AI対戦)"
+    self.caption = "神経衰弱"
 
     @cards = []
     @flipped_cards = []
@@ -59,7 +59,7 @@ class MemoryGame < Gosu::Window
     @known_cards = {}
     
     @player_score = 0
-    @computer_score = 0
+    @player_combo_count = 0
     @timer = 0
     @ai_action = nil
     
@@ -93,34 +93,18 @@ class MemoryGame < Gosu::Window
   end
 
   def draw
-  @cards.each { |card| card.draw(@card_font) }
-  
-  # スコアを「あなた 3 - 5 コンピュータ」の形式で表示
-  # 数字だけを赤色で表示するために分割して描画
-  @message_font.draw_text("あなたのスコア: ", 10, 10, 0, 1.0, 1.0, Gosu::Color::YELLOW)
-  @message_font.draw_text("#{@player_score}", 10 + @message_font.text_width("あなたのスコア: "), 10, 0, 1.0, 1.0, Gosu::Color::RED)
-  @message_font.draw_text(" - ", 10 + @message_font.text_width("あなたのスコア: #{@player_score}"), 10, 0, 1.0, 1.0, Gosu::Color::YELLOW)
-  @message_font.draw_text("#{@computer_score}", 10 + @message_font.text_width("あなたのスコア: #{@player_score} - "), 10, 0, 1.0, 1.0, Gosu::Color::RED)
-  @message_font.draw_text("", 10 + @message_font.text_width("あなたのスコア: #{@player_score} - #{@computer_score}"), 10, 0, 1.0, 1.0, Gosu::Color::YELLOW)
-  
-  # ゲーム終了時のメッセージ
-  if @game_over
-    win_message = ""
-    if @player_score > @computer_score
-      win_message = "あなたの勝ちです！"
-    elsif @player_score < @computer_score
-      win_message = "コンピュータの勝ちです！"
-    else
-      win_message = "引き分けです！"
-    end
+    @cards.each { |card| card.draw(@card_font) }
     
-    @message_font.draw_text("ゲーム終了！", 10, 430, 0, 1.0, 1.0, Gosu::Color::RED)
-    @message_font.draw_text(win_message, 10, 450, 0, 1.0, 1.0, Gosu::Color::RED)
-    @message_font.draw_text("Escキーを押して終了", 10, 470, 0, 1.0, 1.0, Gosu::Color::YELLOW)
-  else
-    @message_font.draw_text(@message, 10, 450, 0, 1.0, 1.0, Gosu::Color::YELLOW)
+    @message_font.draw_text("現在のスコア: #{@player_score}点", 10, 10, 0, 1.0, 1.0, Gosu::Color::YELLOW)
+    
+    if @game_over
+      win_message = "ゲーム終了！"
+      @message_font.draw_text(win_message, 10, 430, 0, 1.0, 1.0, Gosu::Color::YELLOW)
+      @message_font.draw_text("最終スコア: #{@player_score}点", 10, 450, 0, 1.0, 1.0, Gosu::Color::YELLOW)
+    else
+      @message_font.draw_text(@message, 10, 450, 0, 1.0, 1.0, Gosu::Color::YELLOW)
+    end
   end
-end
 
   def update
     if @game_over
@@ -128,9 +112,11 @@ end
     end
 
     if @flipped_cards.size == 2
+      # 2枚めくられたら1.5秒待機してペア判定
       if Gosu.milliseconds - @timer > 1500
         is_pair_found = check_pair
         @flipped_cards = []
+        # ペアが見つかった場合はターンを切り替えない
         switch_turn unless is_pair_found || @game_over
       end
     elsif @current_turn == :computer
@@ -139,6 +125,18 @@ end
   end
 
   def handle_computer_turn
+    # 2枚めくり終えた後の処理
+    if @flipped_cards.size == 2
+      if Gosu.milliseconds - @timer > 1500
+        is_pair_found = check_pair
+        @flipped_cards = []
+        # ペアが見つからなかった場合のみターンを切り替える
+        switch_turn unless is_pair_found
+      end
+      return
+    end
+    
+    # 1枚目をめくる
     if @flipped_cards.empty?
       @ai_action = find_card_to_flip
       flip_card(@ai_action[0])
@@ -147,6 +145,7 @@ end
       return
     end
 
+    # 2枚目をめくる
     if @flipped_cards.size == 1 && Gosu.milliseconds - @timer > 1000
       flip_card(@ai_action[1])
       @message = "コンピュータがめくったカード: #{@flipped_cards[0].value} と #{@flipped_cards[1].value}"
@@ -161,37 +160,44 @@ end
   end
   
   def check_pair
-    card1, card2 = @flipped_cards
+  card1, card2 = @flipped_cards
+  
+  if card1.value == card2.value
+    card1.match!
+    card2.match!
+    @matched_pairs += 1
     
-    if card1.value == card2.value
-      card1.match!
-      card2.match!
-      @matched_pairs += 1
-      
-      if @current_turn == :player
-        @player_score += 1
+    if @current_turn == :player
+      @player_combo_count += 1
+      case @player_combo_count
+      when 1
+        @player_score += 1000
+      when 2
+        @player_score += 2000
       else
-        @computer_score += 1
+        @player_score += 3000
       end
-      
-      @message = "#{@current_turn == :player ? 'あなた' : 'コンピュータ'}がペアを見つけました！"
-      if @matched_pairs == 8
-        @game_over = true
-      end
-      return true
+      @message = "ペアを見つけました！ボーナス！"
     else
-      card1.flip_back!
-      card2.flip_back!
-      @message = "ちがいます..."
-      return false
+      # コンピュータのペア発見時のメッセージを削除
     end
+    
+    if @matched_pairs == 8
+      @game_over = true
+    end
+    return true
+  else
+    card1.flip_back!
+    card2.flip_back!
+    @player_combo_count = 0
+    @message = "ちがいます..."
+    return false
   end
+end
 
   def switch_turn
     @current_turn = (@current_turn == :player ? :computer : :player)
-    if !@game_over
-        @message = @current_turn == :player ? "あなたのターン" : "コンピュータのターン"
-    end
+    @message = @current_turn == :player ? "あなたのターン" : "コンピュータのターン"
   end
 
   def button_down(id)
@@ -208,11 +214,11 @@ end
         flip_card(card)
         
         if @flipped_cards.size == 1
-            @message = "めくったカード: #{card.value}"
+            @message = "あなたがめくったカード: #{card.value}"
         elsif @flipped_cards.size == 2
             @timer = Gosu::milliseconds
             card1, card2 = @flipped_cards
-            @message = "めくったカード: #{card1.value} と #{card2.value}"
+            @message = "あなたがめくったカード: #{card1.value} と #{card2.value}"
         end
         break
       end
