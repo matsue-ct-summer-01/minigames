@@ -1,6 +1,9 @@
 # frozen_string_literal: true
 require 'gosu'
 require_relative './games/tetris/main'
+require_relative './games/shooting/main'
+require_relative './games/uno/main'
+
 #require_relative './breakout/main' # 実際のパスに合わせてください
 
 # ===============================================================
@@ -24,6 +27,8 @@ class GameManager < Gosu::Window
     # ゲームのクラス（設計図）をハッシュに格納しておく
     @game_classes = {
       tetris: TetrisGame,
+      shooting: ShootingGame,
+      uno: UnoGame,
       #breakout: BreakoutGame
     }
 
@@ -47,7 +52,7 @@ class GameManager < Gosu::Window
       # メニュー画面を描画
       Gosu.draw_rect(0, 0, width, height, Gosu::Color::BLACK)
       @font.draw_text('PRESS ENTER TO START', 150, 200, 1, 1.0, 1.0, Gosu::Color::WHITE)
-      @menu_font.draw_text('Press T for Tetris, B for Breakout', 100, 250, 1, 1.0, 1.0, Gosu::Color::WHITE)
+      @menu_font.draw_text('Press T for Tetris, B for Breakout S for Shooting', 100, 250, 1, 1.0, 1.0, Gosu::Color::WHITE)
       @menu_font.draw_text("Selected: #{@current_game_key.to_s.capitalize}", 200, 300, 1, 1.0, 1.0, Gosu::Color::YELLOW)
     end
   end
@@ -86,6 +91,16 @@ class GameManager < Gosu::Window
         # Bキーでブレイクアウトを選択
         @current_game_key = :breakout
         puts 'Switched to Breakout.'
+
+      when Gosu::KB_S
+        # Sキーでシューティングを選択
+        @current_game_key = :shooting
+        puts 'Switched to Shooting.'
+
+      when Gosu::KB_U
+      # Uキーでunoを選択
+      @current_game_key = :uno
+      puts 'Switched to UNO.'
       end
     end
   end
