@@ -9,7 +9,7 @@ class PKGame #< Gosu::Window ###共有時に無効
   HEIGHT = 480
   DIRECTIONS = ["左", "中央", "右"]
 
-  def initialize(window)　###共有時に有効
+  def initialize(window) ###共有時に有効
     #super(WIDTH, HEIGHT) ###共有時に無効
     self.caption = "サッカー PK対決"
 
@@ -43,6 +43,18 @@ class PKGame #< Gosu::Window ###共有時に無効
     @goal_count = 0
 
     @game_over= false
+
+    #サウンド
+    @kick_sound  = Gosu::Sample.new("PKgame_sound/ボールを蹴る.mp3")
+    @goal_sound  = Gosu::Sample.new("PKgame_sound/ゴールしたとき（サッカー）.mp3")
+    @catch_sound  = Gosu::Sample.new("PKgame_sound/キャッチする（ドッチボール）.mp3")
+    @whistle_sound_start  = Gosu::Sample.new("PKgame_sound/ホイッスル（ピーッ）.mp3")
+    @whistle_sound_end  = Gosu::Sample.new("PKgame_sound/ホイッスル（ピピーッ）.mp3")
+    @game_clear_sound = Gosu::Sample.new("PKgame_sound/歓声.mp3")
+
+    #開始の笛
+    @whistle_sound_start.play
+
   end
 
   def self.window_size
@@ -145,7 +157,7 @@ class PKGame #< Gosu::Window ###共有時に無効
 
     if player_choice
       # ボールのターゲット座標を決める
-      #@kick_sound.play
+      @kick_sound.play
       case player_choice
       when 0 then @ball_target_x = WIDTH/2 - 80
       when 1 then @ball_target_x = WIDTH/2
@@ -172,10 +184,10 @@ class PKGame #< Gosu::Window ###共有時に無効
 
   def judge_result
     if @player_choice == @goalkeeper_choice
-      #@catch_sound.play
+      @catch_sound.play
       @result = "🥅 キーパーが#{DIRECTIONS[@goalkeeper_choice]}へ！セーブされた！"
     else
-      #@goal_sound.play
+      @goal_sound.play
       @result = "⚽ ゴール！！ #{DIRECTIONS[@player_choice]}に決めた！"
       @score += 3000
       @goal_count += 1
@@ -186,6 +198,7 @@ class PKGame #< Gosu::Window ###共有時に無効
       @message = "←:左 ↑:中央 →:右 でシュート！"
     else
       @message = "試合終了！ 矢印キーで結果"
+      @whistle_sound_end.play
     end
 
     # ボール位置をリセット
@@ -195,7 +208,8 @@ class PKGame #< Gosu::Window ###共有時に無効
 
   def result
     if @goal_count >= 3
-      @result_score = "あなたのスコア #{@score} \n      クリア！"
+      @result_score = "あなたのスコア #{@score} \n        クリア！"
+      @game_clear_sound.play
     else
       @result_score = "あなたのスコア #{@score} \n  ゲームオーバー"
       @game_over = true
