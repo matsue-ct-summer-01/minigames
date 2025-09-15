@@ -8,7 +8,7 @@ require 'gosu'
 class TetrisGame
   # --- 1. 定数とテトリミノの定義 ---
   module ZOrder
-    BACKGROUND, BOARD, TETROMINO, UI = *0..3
+    BACKGROUND, TETROMINO, BOARD, UI = *0..3
   end
 
   TETROMINOES = {
@@ -22,7 +22,7 @@ class TetrisGame
 
   # GameManagerがウィンドウサイズを取得するためのクラスメソッド
   def self.window_size
-    { width: 300, height: 480 }
+    { width: 450, height: 480 }
   end
 
   def initialize(window)
@@ -30,7 +30,7 @@ class TetrisGame
     
     @block_size = 30
     @board_width = 10
-    @board_height = 16 # 高さを16に変更 (30 * 16 = 480)
+    @board_height = 16
     @board = Array.new(@board_height) { Array.new(@board_width, nil) }
     @score = 0
     @game_over = false
@@ -39,6 +39,11 @@ class TetrisGame
     @fall_interval = 500
     @font = Gosu::Font.new(20)
     
+    # BGMの読み込みと再生
+    # .mp3は非推奨のため、もし可能であれば.oggファイルに変換して使ってください。
+    @bgm = Gosu::Song.new('./assets/sounds/tetris.mp3')
+    @bgm.play(true) # 引数にtrueを渡すとループ再生になります
+
     new_tetromino
   end
 
@@ -69,6 +74,9 @@ class TetrisGame
     else
       @font.draw_text("スコア: #{@score}", 10, 10, ZOrder::UI)
     end
+    
+    # 操作説明を描画
+    draw_instructions
   end
 
   def button_down(id)
@@ -88,11 +96,18 @@ class TetrisGame
         check_game_over
       end
     when Gosu::KB_UP
-      rotate_tetromino
+      rotate_tetromino_right
+    when Gosu::KB_Z, Gosu::KB_X
+      rotate_tetromino_left
     end
   end
 
   private
+  
+  def draw_instructions
+    text = "操作方法:\n\n←, → : 移動\n↓ : 加速\n↑ : 右回転\nZ, X : 左回転\n\nスコア: #{@score}"
+    @font.draw_text(text, @board_width * @block_size + 20, 50, ZOrder::UI, 1.0, 1.0, Gosu::Color::WHITE)
+  end
 
   def new_tetromino
     type = TETROMINOES.keys.sample
@@ -178,31 +193,59 @@ class TetrisGame
       @score += 800
     end
   end
-
-  def rotate_tetromino
-    original_shape = @current_tetromino_shape
-    original_x = @x
-    rotated = original_shape.transpose.map(&:reverse)
-    @current_tetromino_shape = rotated
-    
-    adjust_count = 0
-    max_adjusts = 5
-    while collision? && adjust_count < max_adjusts
-      if @x < 0
-        @x += 1
-      elsif @x + @current_tetromino_shape[0].size > @board_width
-        @x -= 1
-      else
-        break
-      end
-      adjust_count += 1
-    end
-
-    if collision?
+  
+def rotate_tetromino_right
+  original_shape = @current_tetromino_shape
+  original_x, original_y = @x, @y
+  
+  # 配列を転置し、各行を反転させることで90度右回転
+  rotated = original_shape.transpose.map(&:reverse)
+  
+  @current_tetromino_shape = rotated
+  
+  if collision?
+    if !kick_wall(original_shape, rotated)
       @current_tetromino_shape = original_shape
-      @x = original_x
+      @x, @y = original_x, original_y
     end
   end
+end
+
+def rotate_tetromino_left
+  original_shape = @current_tetromino_shape
+  original_x, original_y = @x, @y
+  
+  # 各行を反転し、全体を転置することで90度左回転
+  rotated = original_shape.map(&:reverse).transpose
+  
+  @current_tetromino_shape = rotated
+  
+  if collision?
+    if !kick_wall(original_shape, rotated)
+      @current_tetromino_shape = original_shape
+      @x, @y = original_x, original_y
+    end
+  end
+end
+
+def kick_wall(original_shape, rotated_shape)
+  adjust_count = 0
+  max_adjusts = 5
+  
+  # 壁からのズレを計算して調整
+  while collision? && adjust_count < max_adjusts
+    if @x < 0
+      @x += 1
+    elsif @x + rotated_shape[0].size > @board_width
+      @x -= 1
+    else
+      return false
+    end
+    adjust_count += 1
+  end
+  !collision?
+end
+  
 
   def check_game_over
     if collision?(0, 0)
