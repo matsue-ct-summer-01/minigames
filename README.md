@@ -12,6 +12,14 @@
 ## chatGPTが出してきたフォルダ構成(シーン別に管理)
 ~~それぞれが作るゲームファイルの名前はshooting_ochiai.rb(ゲーム名_名前.rb)みたいな感じでいいのでは~~<br>
 ウィンドウは共通・シーンで管理する方式と仮定<br>
+##スコアとゲームおーばの仕組み
+
+ def update<br>
+    if @game_over<br>
+      @parent.on_game_over(@score) # 親のメソッドを呼び出す<br>
+    end<br>
+  end<br>
+親側でゲームオーバーの知らせと、スコアを受け取るメソッドを作成したので、上みたいな感じで、ゲーム終わったらメソッド呼び出してください
 
 ```plaintext
 minigames/
