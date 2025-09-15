@@ -1,30 +1,36 @@
-# main.rb
+# frozen_string_literal: true
 require 'gosu'
 
-# --- 1. 定数とテトリミノの定義 ---
-# Zオーダー: 描画順序を定義します。小さい値が下になります。
-module ZOrder
-  BACKGROUND, BOARD, TETROMINO, UI = *0..3
-end
+# ===============================================================
+# ▼ ゲーム1: テトリス (TetrisGame)
+# Gosu::Windowを継承せず、ロジック部分のみを担当します。
+# ===============================================================
+class TetrisGame
+  # --- 1. 定数とテトリミノの定義 ---
+  module ZOrder
+    BACKGROUND, BOARD, TETROMINO, UI = *0..3
+  end
 
-TETROMINOES = {
-  i: { shape: [[1, 1, 1, 1]], color: Gosu::Color.rgb(0, 255, 255) },
-  o: { shape: [[1, 1], [1, 1]], color: Gosu::Color.rgb(255, 255, 0) },
-  j: { shape: [[1, 0, 0], [1, 1, 1]], color: Gosu::Color.rgb(0, 0, 255) },
-  l: { shape: [[0, 0, 1], [1, 1, 1]], color: Gosu::Color.rgb(255, 165, 0) },
-  s: { shape: [[0, 1, 1], [1, 1, 0]], color: Gosu::Color.rgb(0, 255, 0) },
-  z: { shape: [[1, 1, 0], [0, 1, 1]], color: Gosu::Color.rgb(255, 0, 0) }
-}.freeze
+  TETROMINOES = {
+    i: { shape: [[1, 1, 1, 1]], color: Gosu::Color.rgb(0, 255, 255) },
+    o: { shape: [[1, 1], [1, 1]], color: Gosu::Color.rgb(255, 255, 0) },
+    j: { shape: [[1, 0, 0], [1, 1, 1]], color: Gosu::Color.rgb(0, 0, 255) },
+    l: { shape: [[0, 0, 1], [1, 1, 1]], color: Gosu::Color.rgb(255, 165, 0) },
+    s: { shape: [[0, 1, 1], [1, 1, 0]], color: Gosu::Color.rgb(0, 255, 0) },
+    z: { shape: [[1, 1, 0], [0, 1, 1]], color: Gosu::Color.rgb(255, 0, 0) }
+  }.freeze
 
-# --- 2. ゲームウィンドウクラス ---
-class TetrisGame < Gosu::Window
-  def initialize
-    super 300, 600
-    self.caption = "テトリス"
+  # GameManagerがウィンドウサイズを取得するためのクラスメソッド
+  def self.window_size
+    { width: 300, height: 480 }
+  end
 
+  def initialize(window)
+    @window = window
+    
     @block_size = 30
     @board_width = 10
-    @board_height = 20
+    @board_height = 16 # 高さを16に変更 (30 * 16 = 480)
     @board = Array.new(@board_height) { Array.new(@board_width, nil) }
     @score = 0
     @game_over = false
@@ -53,7 +59,7 @@ class TetrisGame < Gosu::Window
   end
 
   def draw
-    Gosu.draw_rect(0, 0, width, height, Gosu::Color::BLACK, ZOrder::BACKGROUND)
+    Gosu.draw_rect(0, 0, @window.width, @window.height, Gosu::Color::BLACK, ZOrder::BACKGROUND)
     draw_board
     draw_current_tetromino
 
@@ -103,11 +109,10 @@ class TetrisGame < Gosu::Window
         if color
           Gosu.draw_rect(x * @block_size, y * @block_size, @block_size, @block_size, color, ZOrder::BOARD)
         end
-        # 枠線を描画する
-        Gosu.draw_rect(x * @block_size, y * @block_size, @block_size, 1, Gosu::Color::GRAY, ZOrder::BOARD) # 上
-        Gosu.draw_rect(x * @block_size, y * @block_size + @block_size - 1, @block_size, 1, Gosu::Color::GRAY, ZOrder::BOARD) # 下
-        Gosu.draw_rect(x * @block_size, y * @block_size, 1, @block_size, Gosu::Color::GRAY, ZOrder::BOARD) # 左
-        Gosu.draw_rect(x * @block_size + @block_size - 1, y * @block_size, 1, @block_size, Gosu::Color::GRAY, ZOrder::BOARD) # 右
+        Gosu.draw_rect(x * @block_size, y * @block_size, @block_size, 1, Gosu::Color::GRAY, ZOrder::BOARD)
+        Gosu.draw_rect(x * @block_size, y * @block_size + @block_size - 1, @block_size, 1, Gosu::Color::GRAY, ZOrder::BOARD)
+        Gosu.draw_rect(x * @block_size, y * @block_size, 1, @block_size, Gosu::Color::GRAY, ZOrder::BOARD)
+        Gosu.draw_rect(x * @block_size + @block_size - 1, y * @block_size, 1, @block_size, Gosu::Color::GRAY, ZOrder::BOARD)
       end
     end
   end
@@ -175,24 +180,27 @@ class TetrisGame < Gosu::Window
   end
 
   def rotate_tetromino
-    rotated = @current_tetromino_shape.transpose.map(&:reverse)
-    
-    # 壁衝突時の修正
+    original_shape = @current_tetromino_shape
     original_x = @x
-    
-    # 衝突判定
+    rotated = original_shape.transpose.map(&:reverse)
     @current_tetromino_shape = rotated
-    while collision?
+    
+    adjust_count = 0
+    max_adjusts = 5
+    while collision? && adjust_count < max_adjusts
       if @x < 0
         @x += 1
       elsif @x + @current_tetromino_shape[0].size > @board_width
         @x -= 1
       else
-        # 衝突した場合、回転を元に戻す
-        @current_tetromino_shape = @current_tetromino_shape.reverse.transpose
-        @x = original_x
-        return
+        break
       end
+      adjust_count += 1
+    end
+
+    if collision?
+      @current_tetromino_shape = original_shape
+      @x = original_x
     end
   end
 
@@ -202,5 +210,3 @@ class TetrisGame < Gosu::Window
     end
   end
 end
-
-TetrisGame.new.show if __FILE__ == $0

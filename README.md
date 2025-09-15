@@ -11,6 +11,7 @@
 ```plaintext
 minigames/
 ├─ main.rb                  # アプリのエントリーポイント
+
 │
 ├─ lib/                     # 共通処理やユーティリティ
 │   ├─ base_scene.rb        # 全シーン共通の抽象クラス
@@ -50,3 +51,4 @@ minigames/
         ├─ ball.rb
         ├─ goalie.rb
         └─ player.rb
+
