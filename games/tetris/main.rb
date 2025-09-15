@@ -8,7 +8,7 @@ require 'gosu'
 class TetrisGame
   # --- 1. 定数とテトリミノの定義 ---
   module ZOrder
-    BACKGROUND,  TETROMINO,BOARD, UI = *0..3
+    BACKGROUND, TETROMINO,BOARD, UI = *0..3
   end
 
   TETROMINOES = {
@@ -30,7 +30,7 @@ class TetrisGame
     
     @block_size = 30
     @board_width = 10
-    @board_height = 16 # 高さを16に変更 (30 * 16 = 480)
+    @board_height = 16
     @board = Array.new(@board_height) { Array.new(@board_width, nil) }
     @score = 0
     @game_over = false
@@ -39,6 +39,11 @@ class TetrisGame
     @fall_interval = 500
     @font = Gosu::Font.new(20)
     
+    # BGMの読み込みと再生
+    # .mp3は非推奨のため、もし可能であれば.oggファイルに変換して使ってください。
+    @bgm = Gosu::Song.new('./assets/sounds/tetris.mp3')
+    @bgm.play(true) # 引数にtrueを渡すとループ再生になります
+
     new_tetromino
   end
 
@@ -178,26 +183,34 @@ class TetrisGame
       @score += 800
     end
   end
-
+  
   def rotate_tetromino
+    # 1. 形状を保存
     original_shape = @current_tetromino_shape
     original_x = @x
+    
+    # 2. 形状を回転させる
+    # 配列を転置し、各行を反転させることで90度回転を実現
     rotated = original_shape.transpose.map(&:reverse)
     @current_tetromino_shape = rotated
     
+    # 3. 衝突チェックと位置調整
+    # 回転後のブロックが壁や他のブロックと衝突しないように位置をずらす
     adjust_count = 0
     max_adjusts = 5
     while collision? && adjust_count < max_adjusts
       if @x < 0
-        @x += 1
+        @x += 1 # 左側の壁に衝突したら右に1マスずらす
       elsif @x + @current_tetromino_shape[0].size > @board_width
-        @x -= 1
+        @x -= 1 # 右側の壁に衝突したら左に1マスずらす
       else
-        break
+        break # 左右に動かしても解決しない場合はループを抜ける
       end
       adjust_count += 1
     end
 
+    # 4. 最終チェック
+    # 調整後も衝突している場合は、回転をキャンセルして元の状態に戻す
     if collision?
       @current_tetromino_shape = original_shape
       @x = original_x
