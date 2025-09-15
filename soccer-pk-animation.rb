@@ -1,6 +1,6 @@
 require 'gosu'
 
-class PKGame < Gosu::Window
+class PKGame
   WIDTH  = 640
   HEIGHT = 480
   DIRECTIONS = ["左", "中央", "右"]
@@ -29,7 +29,10 @@ class PKGame < Gosu::Window
 
     @result = ""
     @result_score = ""
-    @enter=0
+  end
+
+  def self.window_size
+  { width: 640, height: 480 }
   end
 
   def update
@@ -39,7 +42,7 @@ class PKGame < Gosu::Window
       @ball_y += (@ball_target_y - @ball_y) * 0.2
 
       # ゴール到達判定
-      if ((@ball_x - @ball_target_x).abs < 5) && ((@ball_y - @ball_target_y).abs < 5)
+      if ((@ball_x - @ball_target_x).abs < 1) && ((@ball_y - @ball_target_y).abs < 1)
         @ball_moving = false
         judge_result
       end
@@ -48,7 +51,7 @@ class PKGame < Gosu::Window
     # キーパー移動アニメーション
     if @keeper_moving
       @keeper_x += (@keeper_target_x - @keeper_x) * 0.2
-      if (@keeper_x - @keeper_target_x).abs < 5
+      if (@keeper_x - @keeper_target_x).abs < 1
         @keeper_moving = false
       end
     end
@@ -85,12 +88,16 @@ class PKGame < Gosu::Window
     Gosu.draw_rect(@ball_x - 10, @ball_y - 10, 20, 20, Gosu::Color::YELLOW, 0)
 
     # UI
+    if @round == 1
+      @font.draw_text("スコア３以上で勝利", WIDTH/2 - 100, HEIGHT/2 , 1)
+    end
+    
     if @round <= 5
       @font.draw_text("ラウンド: #{@round} / 5", 20, 20, 1)
     end
     @font.draw_text("スコア: #{@score}", 20, 60, 1)
     @font.draw_text("スコア: #{@score}", 20, 100, 1)
-    @font.draw_text(@message, 20, 400, 1)
+    @font.draw_text(@message, 20, 390, 1)
     @font.draw_text(@result, 20, 300, 1, 1, 1, Gosu::Color::RED) unless @result.empty?
     @font.draw_text(@result_score, WIDTH/2 - 100, HEIGHT/2 , 1) unless @result.empty?
   end
@@ -158,9 +165,9 @@ class PKGame < Gosu::Window
 
   def result
       if @score >= 3
-      @result_score = "スコア #{@score} あなたの勝ち"
+      @result_score = "スコア #{@score} あなたの勝ち!"
       else
-      @result_score = "スコア #{@score} あなたの負け"
+      @result_score = "スコア #{@score} あなたの負け!"
       end
   end
 end
