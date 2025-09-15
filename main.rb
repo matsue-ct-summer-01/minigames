@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 require 'gosu'
 require_relative './tetris/main'
-require_relative './breakout/main' # 実際のパスに合わせてください
+#require_relative './breakout/main' # 実際のパスに合わせてください
 
 # ===============================================================
 # ▼ ゲームマネージャークラス (GameManager)
@@ -24,7 +24,7 @@ class GameManager < Gosu::Window
     # ゲームのクラス（設計図）をハッシュに格納しておく
     @game_classes = {
       tetris: TetrisGame,
-      breakout: BreakoutGame
+      #breakout: BreakoutGame
     }
 
     @current_game_key = :tetris
