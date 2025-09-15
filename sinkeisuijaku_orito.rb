@@ -93,32 +93,34 @@ class MemoryGame < Gosu::Window
   end
 
   def draw
-    @cards.each { |card| card.draw(@card_font) }
-    
-    # 常にスコアを表示する
-    @message_font.draw_text("あなたのスコア: #{@player_score}", 10, 10, 0, 1.0, 1.0, Gosu::Color::YELLOW)
-    @message_font.draw_text("コンピュータのスコア: #{@computer_score}", 10, 30, 0, 1.0, 1.0, Gosu::Color::YELLOW)
-    
-    # ゲーム終了時のメッセージ
-    if @game_over
-      win_message = ""
-      if @player_score > @computer_score
-        win_message = "あなたの勝ちです！"
-      elsif @player_score < @computer_score
-        win_message = "コンピュータの勝ちです！"
-      else
-        win_message = "引き分けです！"
-      end
-      
-      # 画面中央に大きく表示
-      @message_font.draw_text("ゲーム終了！", self.width / 2 - 50, self.height / 2 - 30, 0, 2.0, 2.0, Gosu::Color::WHITE)
-      @message_font.draw_text(win_message, self.width / 2 - 50, self.height / 2, 0, 2.0, 2.0, Gosu::Color::WHITE)
-      @message_font.draw_text("Escキーを押して終了", self.width / 2 - 80, self.height / 2 + 30, 0, 1.0, 1.0, Gosu::Color::YELLOW)
+  @cards.each { |card| card.draw(@card_font) }
+  
+  # スコアを「あなた 3 - 5 コンピュータ」の形式で表示
+  # 数字だけを赤色で表示するために分割して描画
+  @message_font.draw_text("あなたのスコア: ", 10, 10, 0, 1.0, 1.0, Gosu::Color::YELLOW)
+  @message_font.draw_text("#{@player_score}", 10 + @message_font.text_width("あなたのスコア: "), 10, 0, 1.0, 1.0, Gosu::Color::RED)
+  @message_font.draw_text(" - ", 10 + @message_font.text_width("あなたのスコア: #{@player_score}"), 10, 0, 1.0, 1.0, Gosu::Color::YELLOW)
+  @message_font.draw_text("#{@computer_score}", 10 + @message_font.text_width("あなたのスコア: #{@player_score} - "), 10, 0, 1.0, 1.0, Gosu::Color::RED)
+  @message_font.draw_text("", 10 + @message_font.text_width("あなたのスコア: #{@player_score} - #{@computer_score}"), 10, 0, 1.0, 1.0, Gosu::Color::YELLOW)
+  
+  # ゲーム終了時のメッセージ
+  if @game_over
+    win_message = ""
+    if @player_score > @computer_score
+      win_message = "あなたの勝ちです！"
+    elsif @player_score < @computer_score
+      win_message = "コンピュータの勝ちです！"
     else
-      # 通常時のメッセージ
-      @message_font.draw_text(@message, 10, 450, 0, 1.0, 1.0, Gosu::Color::YELLOW)
+      win_message = "引き分けです！"
     end
+    
+    @message_font.draw_text("ゲーム終了！", 10, 430, 0, 1.0, 1.0, Gosu::Color::RED)
+    @message_font.draw_text(win_message, 10, 450, 0, 1.0, 1.0, Gosu::Color::RED)
+    @message_font.draw_text("Escキーを押して終了", 10, 470, 0, 1.0, 1.0, Gosu::Color::YELLOW)
+  else
+    @message_font.draw_text(@message, 10, 450, 0, 1.0, 1.0, Gosu::Color::YELLOW)
   end
+end
 
   def update
     if @game_over
@@ -141,14 +143,14 @@ class MemoryGame < Gosu::Window
       @ai_action = find_card_to_flip
       flip_card(@ai_action[0])
       @message = "コンピュータがめくったカード: #{@flipped_cards[0].value}"
-      @timer = Gosu.milliseconds
+      @timer = Gosu::milliseconds
       return
     end
 
     if @flipped_cards.size == 1 && Gosu.milliseconds - @timer > 1000
       flip_card(@ai_action[1])
       @message = "コンピュータがめくったカード: #{@flipped_cards[0].value} と #{@flipped_cards[1].value}"
-      @timer = Gosu.milliseconds
+      @timer = Gosu::milliseconds
     end
   end
 
@@ -187,7 +189,9 @@ class MemoryGame < Gosu::Window
 
   def switch_turn
     @current_turn = (@current_turn == :player ? :computer : :player)
-    @message = @current_turn == :player ? "あなたのターン" : "コンピュータのターン"
+    if !@game_over
+        @message = @current_turn == :player ? "あなたのターン" : "コンピュータのターン"
+    end
   end
 
   def button_down(id)
@@ -206,7 +210,7 @@ class MemoryGame < Gosu::Window
         if @flipped_cards.size == 1
             @message = "めくったカード: #{card.value}"
         elsif @flipped_cards.size == 2
-            @timer = Gosu.milliseconds
+            @timer = Gosu::milliseconds
             card1, card2 = @flipped_cards
             @message = "めくったカード: #{card1.value} と #{card2.value}"
         end
