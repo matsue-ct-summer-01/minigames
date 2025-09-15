@@ -47,7 +47,7 @@ end
 
 class MemoryGame < Gosu::Window
   def initialize
-    super(640, 480)
+    super(640,480)
     self.caption = "神経衰弱"
 
     @cards = []
@@ -108,7 +108,7 @@ class MemoryGame < Gosu::Window
 
   def update
     if @game_over
-      return
+      @parent.on_game_over(@score)
     end
 
     if @flipped_cards.size == 2
@@ -177,7 +177,7 @@ class MemoryGame < Gosu::Window
       else
         @player_score += 3000
       end
-      @message = "ペアを見つけました！ボーナス！"
+      @message = "ペアを見つけました！ポイント獲得！"
     else
       # コンピュータのペア発見時のメッセージを削除
     end
