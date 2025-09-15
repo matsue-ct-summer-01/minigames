@@ -179,8 +179,9 @@ class ShootingGame
   end
 
   # ── ShootingGame インスタンス ──
-  def initialize(window)
+  def initialize(window,parent = nil)
     @window = window
+    @parent = parent
     @player = Player.new
     @bullets = []
     @enemy_bullets = []
@@ -190,6 +191,7 @@ class ShootingGame
     @spawn_timer = 0
     @score = 0
     @game_over = false
+    
   end
 
   def update
@@ -221,7 +223,7 @@ class ShootingGame
         if collide_rect?(b.rect, blk.rect)
           blk.destroy
           b.destroy
-          @score += 100*FALL_SPEED
+          @score += 100
         end
       end
     end
