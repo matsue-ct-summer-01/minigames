@@ -191,8 +191,8 @@ class ShootingGame
   end
 
   # ── ShootingGame インスタンス
-  def initialize(window,parent = nil)
-    @window = window
+  def initialize(parent)
+    
     @parent = parent
     @player = Player.new
     @bullets = []
