@@ -202,6 +202,10 @@ class ShootingGame
     @spawn_timer = 0
     @score = 0
     @game_over = false
+
+    @bgm = Gosu::Song.new("assets/sounds/shooting.mp3")
+    @bgm.play(true)
+    @shot_sound = Gosu::Sample.new("assets/sounds/shooting_shot.mp3")
     
   end
 
@@ -211,6 +215,7 @@ class ShootingGame
     @player.update
     if Gosu.button_down?(Gosu::KB_Z)
       b = @player.shoot
+      @shot_sound.play
       @bullets << b if b
     end
 
