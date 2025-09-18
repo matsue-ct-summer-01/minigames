@@ -12,15 +12,17 @@ class PKGame #< Gosu::Window ###共有時に無効
   def initialize(window) ###共有時に有効
     #super(WIDTH, HEIGHT) ###共有時に無効
     self.caption = "サッカー PK対決"
-
-    @haikei_image = Gosu::Image.new("./assets/images//penaltyarea.png")#("PKgame_img/penaltyarea.png") #("./assets/images//penaltyarea.png")
+  
+    @haikei_image = Gosu::Image.new("./assets/images/penaltyarea.png")
+    #@haikei_image = Gosu::Image.new("PKgame_img/penaltyarea.png")
 
     @font = Gosu::Font.new(28)
     @round = 1
     @score = 0
     @message = "←:左 ↑:中央 →:右 でシュート！"
 
-    @ball_image = Gosu::Image.new("./assets/images/soccerball.png")#("PKgame_img/soccerball.png") #("./assets/images/soccerball.png")
+    @ball_image = Gosu::Image.new("./assets/images/soccerball.png")
+    #@ball_image = Gosu::Image.new("PKgame_img/soccerball.png")
 
     # ボールの初期位置
     @ball_x = WIDTH / 2 + 6
@@ -38,19 +40,33 @@ class PKGame #< Gosu::Window ###共有時に無効
     @result = ""
     @result_score = ""
 
-    @start_button = 0
+    @end_button = false
 
     @goal_count = 0
 
     @game_over= false
 
     #サウンド
-    @kick_sound  = Gosu::Sample.new("PKgame_sound/ボールを蹴る.mp3")
-    @goal_sound  = Gosu::Sample.new("PKgame_sound/ゴールしたとき（サッカー）.mp3")
-    @catch_sound  = Gosu::Sample.new("PKgame_sound/キャッチする（ドッチボール）.mp3")
-    @whistle_sound_start  = Gosu::Sample.new("PKgame_sound/ホイッスル（ピーッ）.mp3")
-    @whistle_sound_end  = Gosu::Sample.new("PKgame_sound/ホイッスル（ピピーッ）.mp3")
-    @game_clear_sound = Gosu::Sample.new("PKgame_sound/歓声.mp3")
+    @bgm = Gosu::Song.new("./assets/sounds/PKgame_bgm.mp3") 
+    #@bgm = Gosu::Song.new("PKgame_sound/PKgame_bgm.mp3")
+    
+    @kick_sound  = Gosu::Sample.new("./assets/sounds/ボールを蹴る.mp3") 
+    #@kick_sound  = Gosu::Sample.new("PKgame_sound/ボールを蹴る.mp3")
+    
+    @goal_sound  = Gosu::Sample.new("./assets/sounds/ゴールしたとき（サッカー）.mp3") 
+    #@goal_sound  = Gosu::Sample.new("PKgame_sound/ゴールしたとき（サッカー）.mp3")
+    
+    @catch_sound  = Gosu::Sample.new("./assets/sounds/キャッチする（ドッチボール）.mp3") 
+    #@catch_sound  = Gosu::Sample.new("PKgame_sound/キャッチする（ドッチボール）.mp3")
+    
+    @whistle_sound_start  = Gosu::Sample.new("./assets/sounds/ホイッスル（ピーッ）.mp3") 
+    #@whistle_sound_start  = Gosu::Sample.new("PKgame_sound/ホイッスル（ピーッ）.mp3")
+
+    @whistle_sound_end  = Gosu::Sample.new("./assets/sounds/ホイッスル（ピピーッ）.mp3") 
+    #@whistle_sound_end  = Gosu::Sample.new("PKgame_sound/ホイッスル（ピピーッ）.mp3")
+
+    @game_clear_sound = Gosu::Sample.new("./assets/sounds/歓声.mp3") 
+    #@game_clear_sound = Gosu::Sample.new("PKgame_sound/歓声.mp3")
 
     #開始の笛
     @whistle_sound_start.play
@@ -63,6 +79,8 @@ class PKGame #< Gosu::Window ###共有時に無効
 
   def update
     # ボール移動アニメーション
+    @bgm.play
+
     if @ball_moving
       @ball_x += (@ball_target_x - @ball_x) * 0.2  #ボールのx座標が目的地に向かう
       @ball_y += (@ball_target_y - @ball_y) * 0.2  #ボールのy座標が目的地に向かう
@@ -142,6 +160,14 @@ class PKGame #< Gosu::Window ###共有時に無効
     return if @ball_moving #|| @start_button = 0 #|| @round > 5
     
     if @round > 5 
+      case id
+      when Gosu::KB_RETURN then @end_button = 1
+      end
+
+      if @end_button
+        close
+      end
+
       result
       return
     end
@@ -152,7 +178,6 @@ class PKGame #< Gosu::Window ###共有時に無効
     when Gosu::KB_UP    then player_choice = 1
     when Gosu::KB_RIGHT then player_choice = 2
     when Gosu::KB_ESCAPE then close
-    when Gosu::KB_ENTER then @start_button = 1
     end
 
     if player_choice
@@ -211,8 +236,8 @@ class PKGame #< Gosu::Window ###共有時に無効
       @result_score = "あなたのスコア #{@score} \n        クリア！"
       @game_clear_sound.play
     else
-      @result_score = "あなたのスコア #{@score} \n  ゲームオーバー"
-      @game_over = true
+      @result_score = "あなたのスコア #{@score} \n  ゲームオーバー！"
+      #@game_over = true
     end
   end
 end
