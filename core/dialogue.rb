@@ -21,7 +21,7 @@ class Dialogue
     @sound_manager = sound_manager
     @text_speed = text_speed
     @sound_content = sound_content
-    @await_input = await_input # 新しいインスタンス変数
+    @await_input = await_input
     @window = window
     
     @is_finished = false
@@ -56,14 +56,13 @@ class Dialogue
   def button_down(id)
     if id == Gosu::KB_RETURN || id == Gosu::KB_ENTER
       if @is_finished
-        # 文字表示が完了し、入力待ちの場合はtrueを返す
-        @await_input ? true : false
+        return @await_input
       else
-        # 文字表示が未完了の場合はアニメーションをスキップ
         skip_animation
         return false
       end
     end
+    false
   end
 
   private
@@ -76,7 +75,7 @@ class Dialogue
         @displayed_text += char
         @current_char_index += 1
         @typewriter_timer = 0
-        @sound_manager.play(@sound_content)
+        @sound_manager.play(@sound_content) if @sound_content
       else
         @is_finished = true
       end

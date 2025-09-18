@@ -44,15 +44,21 @@ class GameManager < Gosu::Window
     @total_score = 0
     @last_game_score = 0
     
+    # BGMファイルを読み込み、再生します
+    # @bgm = Gosu::Song.new('./assets/sounds/bgm_loop.wav')
+    # @bgm.play(true)
+
     # 統一されたストーリーデータ（イベントの進行順）
     @story_data = [
       # オープニングストーリー
+      { type: :sound, data: "shooting_shot" }, # 効果音をtext指定に変更
       { type: :dialogue, content: "暗い場所で意識を取り戻す。\n\n冷たい石の床、頭上の巨大なアーチ、響くのはかすかな足音。", background: @background_stone, speaker_image: @player_image, text_speed: 2, sound_content: "text_beep", await_input: true },
       { type: :dialogue, content: "ここが...試練の間、か。", background: @background_stone, speaker_image: @player_image, text_speed: 2, sound_content: "text_beep", await_input: true },
       # テトリスゲームの開始
       { type: :dialogue, content: "集中しろ。テトリスで機転を試す。\nブロックを完璧に並べてみろ。さあ、どうする？", background: @background_school, speaker_image: @inquisitor_image, text_speed: 1, sound_content: "text_beep", await_input: true },
       { type: :game, class: TetrisGame },
-      # シューティングゲームの開始
+      # テトリスゲーム後の効果音とストーリー
+      
       { type: :dialogue, content: "テトリスの試練を突破した。合計スコアは#{@total_score}点だ。", background: @background_stone, speaker_image: @player_image, text_speed: 2, sound_content: "text_beep", await_input: true },
       { type: :dialogue, content: "ビビってんじゃねえ！シューティングで度胸見せてこい！\nブロック避けるかブッ壊しちまえ！Z押したら弾撃てっから！", background: @background_school, speaker_image: @inquisitor_image, text_speed: 1, sound_content: "text_beep", await_input: true },
       { type: :game, class: ShootingGame },
@@ -67,7 +73,6 @@ class GameManager < Gosu::Window
   def update
     return if @game_state == STATE_END
     @current_event.update
-    
   end
 
   def draw
@@ -108,6 +113,7 @@ class GameManager < Gosu::Window
     if @current_event_index >= @story_data.length
       @game_state = STATE_END
       self.width, self.height = GAME_WIDTH, GAME_HEIGHT
+      # @bgm.stop
       return
     end
 
@@ -136,6 +142,10 @@ class GameManager < Gosu::Window
       @current_event = game_class.new(self)
       @game_state = STATE_PLAYING
       @current_event_index += 1
+    when :sound
+      @sound_manager.play(event[:data])
+      @current_event_index += 1
+      run_next_event
     end
   end
 
