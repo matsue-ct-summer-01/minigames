@@ -6,6 +6,8 @@ require 'gosu'
 # Gosu::Windowを継承せず、ロジック部分のみを担当します。
 # ===============================================================
 class TetrisGame
+  attr_reader :score
+
   # --- 1. 定数とテトリミノの定義 ---
   module ZOrder
     BACKGROUND, TETROMINO, BOARD, UI = *0..3
@@ -48,20 +50,28 @@ class TetrisGame
   end
 
   def update
-    return if @game_over
-    
-    if Gosu.milliseconds - @last_update > @fall_interval
-      @y += 1
-      @last_update = Gosu.milliseconds
-      if collision?
-        @y -= 1
-        lock_tetromino
-        clear_lines
-        new_tetromino
-        check_game_over
-      end
+  # ゲームオーバー状態になった瞬間、一度だけ親に通知し、BGMを止める
+  if @game_over && !@notified_parent
+    @bgm.stop
+    @window.on_game_over(@score)
+    @notified_parent = true
+  end
+  
+  # ゲームオーバーの場合はこれ以上何も処理しない
+  return if @game_over
+
+  if Gosu.milliseconds - @last_update > @fall_interval
+    @y += 1
+    @last_update = Gosu.milliseconds
+    if collision?
+      @y -= 1
+      lock_tetromino
+      clear_lines
+      new_tetromino
+      check_game_over
     end
   end
+end
 
   def draw
     Gosu.draw_rect(0, 0, @window.width, @window.height, Gosu::Color::BLACK, ZOrder::BACKGROUND)
@@ -100,6 +110,10 @@ class TetrisGame
     when Gosu::KB_Z, Gosu::KB_X
       rotate_tetromino_left
     end
+  end
+  
+  def game_over?
+    @game_over
   end
 
   private
@@ -194,59 +208,55 @@ class TetrisGame
     end
   end
   
-def rotate_tetromino_right
-  original_shape = @current_tetromino_shape
-  original_x, original_y = @x, @y
-  
-  # 配列を転置し、各行を反転させることで90度右回転
-  rotated = original_shape.transpose.map(&:reverse)
-  
-  @current_tetromino_shape = rotated
-  
-  if collision?
-    if !kick_wall(original_shape, rotated)
-      @current_tetromino_shape = original_shape
-      @x, @y = original_x, original_y
+  def rotate_tetromino_right
+    original_shape = @current_tetromino_shape
+    original_x, original_y = @x, @y
+    
+    rotated = original_shape.transpose.map(&:reverse)
+    
+    @current_tetromino_shape = rotated
+    
+    if collision?
+      if !kick_wall(original_shape, rotated)
+        @current_tetromino_shape = original_shape
+        @x, @y = original_x, original_y
+      end
     end
   end
-end
 
-def rotate_tetromino_left
-  original_shape = @current_tetromino_shape
-  original_x, original_y = @x, @y
-  
-  # 各行を反転し、全体を転置することで90度左回転
-  rotated = original_shape.map(&:reverse).transpose
-  
-  @current_tetromino_shape = rotated
-  
-  if collision?
-    if !kick_wall(original_shape, rotated)
-      @current_tetromino_shape = original_shape
-      @x, @y = original_x, original_y
+  def rotate_tetromino_left
+    original_shape = @current_tetromino_shape
+    original_x, original_y = @x, @y
+    
+    rotated = original_shape.map(&:reverse).transpose
+    
+    @current_tetromino_shape = rotated
+    
+    if collision?
+      if !kick_wall(original_shape, rotated)
+        @current_tetromino_shape = original_shape
+        @x, @y = original_y, original_y
+      end
     end
   end
-end
 
-def kick_wall(original_shape, rotated_shape)
-  adjust_count = 0
-  max_adjusts = 5
-  
-  # 壁からのズレを計算して調整
-  while collision? && adjust_count < max_adjusts
-    if @x < 0
-      @x += 1
-    elsif @x + rotated_shape[0].size > @board_width
-      @x -= 1
-    else
-      return false
+  def kick_wall(original_shape, rotated_shape)
+    adjust_count = 0
+    max_adjusts = 5
+    
+    while collision? && adjust_count < max_adjusts
+      if @x < 0
+        @x += 1
+      elsif @x + rotated_shape[0].size > @board_width
+        @x -= 1
+      else
+        return false
+      end
+      adjust_count += 1
     end
-    adjust_count += 1
+    !collision?
   end
-  !collision?
-end
   
-
   def check_game_over
     if collision?(0, 0)
       @game_over = true

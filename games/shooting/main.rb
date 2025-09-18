@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 require 'gosu'
 
 # -----------------------------
@@ -32,17 +33,17 @@ class ShootingGame
     end
 
     def update
-        if !Gosu.button_down?(Gosu::KB_LEFT_SHIFT)
-            @x -= PLAYER_SPEED if Gosu.button_down?(Gosu::KB_LEFT) || Gosu.button_down?(Gosu::KB_A)
-            @x += PLAYER_SPEED if Gosu.button_down?(Gosu::KB_RIGHT) || Gosu.button_down?(Gosu::KB_D)
-            @y -= PLAYER_SPEED if Gosu.button_down?(Gosu::KB_UP) || Gosu.button_down?(Gosu::KB_W)
-            @y += PLAYER_SPEED if Gosu.button_down?(Gosu::KB_DOWN) || Gosu.button_down?(Gosu::KB_S)
-        elsif Gosu.button_down?(Gosu::KB_LEFT_SHIFT)
-            @x -= PLAYER_SPEED_SHIFT if Gosu.button_down?(Gosu::KB_LEFT) || Gosu.button_down?(Gosu::KB_A)
-            @x += PLAYER_SPEED_SHIFT if Gosu.button_down?(Gosu::KB_RIGHT) || Gosu.button_down?(Gosu::KB_D)
-            @y -= PLAYER_SPEED_SHIFT if Gosu.button_down?(Gosu::KB_UP) || Gosu.button_down?(Gosu::KB_W)
-            @y += PLAYER_SPEED_SHIFT if Gosu.button_down?(Gosu::KB_DOWN) || Gosu.button_down?(Gosu::KB_S)
-        end
+      if !Gosu.button_down?(Gosu::KB_LEFT_SHIFT)
+          @x -= PLAYER_SPEED if Gosu.button_down?(Gosu::KB_LEFT) || Gosu.button_down?(Gosu::KB_A)
+          @x += PLAYER_SPEED if Gosu.button_down?(Gosu::KB_RIGHT) || Gosu.button_down?(Gosu::KB_D)
+          @y -= PLAYER_SPEED if Gosu.button_down?(Gosu::KB_UP) || Gosu.button_down?(Gosu::KB_W)
+          @y += PLAYER_SPEED if Gosu.button_down?(Gosu::KB_DOWN) || Gosu.button_down?(Gosu::KB_S)
+      elsif Gosu.button_down?(Gosu::KB_LEFT_SHIFT)
+          @x -= PLAYER_SPEED_SHIFT if Gosu.button_down?(Gosu::KB_LEFT) || Gosu.button_down?(Gosu::KB_A)
+          @x += PLAYER_SPEED_SHIFT if Gosu.button_down?(Gosu::KB_RIGHT) || Gosu.button_down?(Gosu::KB_D)
+          @y -= PLAYER_SPEED_SHIFT if Gosu.button_down?(Gosu::KB_UP) || Gosu.button_down?(Gosu::KB_W)
+          @y += PLAYER_SPEED_SHIFT if Gosu.button_down?(Gosu::KB_DOWN) || Gosu.button_down?(Gosu::KB_S)
+      end
 
       
       @x = [[@x, 0].max, WINDOW_WIDTH - @w].min
@@ -189,7 +190,7 @@ class ShootingGame
     end
   end
 
-  # ── ShootingGame インスタンス ──
+  # ── ShootingGame インスタンス
   def initialize(window,parent = nil)
     @window = window
     @parent = parent
@@ -266,7 +267,9 @@ end
 
 
   def draw
-    window = @window
+    # 描画オブジェクトを親から取得
+    window = @parent
+
     window.draw_rect(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT, Gosu::Color.rgba(10, 10, 20, 255), 0)
     (0..COLUMNS).each do |c|
       x = c * BLOCK_SIZE
@@ -291,7 +294,7 @@ end
 
   def button_down(id)
     if id == Gosu::KB_R && @game_over
-      initialize(@window)
+      initialize(@parent)
     end
   end
 
