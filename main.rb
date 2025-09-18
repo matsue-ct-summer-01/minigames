@@ -42,6 +42,16 @@ class GameManager < Gosu::Window
       puts "Warning: テキスト音ファイルが見つかりません (./assets/sounds/text_beep.ogg)"
     end
 
+    #begin
+      @background_image = Gosu::Image.new('./assets/images/shinden.jpg', tileable: false)
+    #rescue
+    # @background_image = nil
+    #  puts "Warning: 背景画像が見つかりません (/assets/images/shinden.png)"
+    #end
+    #仮置きbgm
+    @bgm = Gosu::Song.new("assets/sounds/intro.mp3")
+    @bgm.play(true)
+
     # 審問官（絵文字を削除してシンプルに）
     @inquisitors = {
       tetris: {
@@ -225,6 +235,10 @@ class GameManager < Gosu::Window
   end
 
   def draw_field
+
+    # 背景画像を描画
+    @background_image&.draw(0, 0, 0, width.to_f / @background_image.width, height.to_f / @background_image.height)
+
     @menu_font.draw_text('試練の間へようこそ！', 180, 50, 1, 1.0, 1.0, Gosu::Color::WHITE)
   end
 
