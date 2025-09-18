@@ -105,32 +105,38 @@ class ShootingGame
   end
 
   # ── EnemyBullet ──
-  class EnemyBullet
-    attr_reader :x, :y, :w, :h
-    SPEED = 2.5
-    def initialize(x, y, angle)
-      @x = x
-      @y = y
-      @angle = angle
-      @w = 6
-      @h = 6
-      @alive = true
-    end
+  # ── EnemyBullet ──
+class EnemyBullet
+  attr_reader :x, :y, :w, :h
+  SPEED = 2.5
 
-    def update
-      @x += SPEED * Math.cos(@angle)
-      @y += SPEED * Math.sin(@angle)
-      @alive = false if @x < 0 || @x > ShootingGame::WINDOW_WIDTH || @y < 0 || @y > ShootingGame::WINDOW_HEIGHT
-    end
-
-    def draw(window)
-      window.draw_rect(@x, @y, @w, @h, Gosu::Color::RED, 3)
-    end
-
-    def alive?; @alive; end
-    def destroy; @alive = false; end
-    def rect; [@x, @y, @w, @h]; end
+  def initialize(x, y, angle)
+    @x = x
+    @y = y
+    @angle = angle
+    @w = 16
+    @h = 16
+    @alive = true
+    # 画像読み込み（retro: trueでピクセル感を維持）
+    @image = Gosu::Image.new("assets/images/shooting_star.png", retro: true)
   end
+
+  def update
+    @x += SPEED * Math.cos(@angle)
+    @y += SPEED * Math.sin(@angle)
+    @alive = false if @x < 0 || @x > ShootingGame::WINDOW_WIDTH || @y < 0 || @y > ShootingGame::WINDOW_HEIGHT
+  end
+
+  def draw(window)
+    # 画像を現在のサイズに合わせて描画
+    @image.draw(@x, @y, 3, @w.to_f / @image.width, @h.to_f / @image.height)
+  end
+
+  def alive?; @alive; end
+  def destroy; @alive = false; end
+  def rect; [@x, @y, @w, @h]; end
+end
+
 
   # ── Block ──
   class Block
@@ -172,7 +178,7 @@ class ShootingGame
           angle = 2 * Math::PI * i / shots
           enemy_bullets << EnemyBullet.new(@x + @size / 2, @y + @size / 2, angle)
         end
-        @shoot_cooldown = rand(120..240)
+        @shoot_cooldown = rand(300..400)
       end
     end
 
@@ -216,10 +222,10 @@ class ShootingGame
 
   # ── プレイヤー更新 ──
   @player.update
-  if Gosu.button_down?(Gosu::KB_Z)
-    b = @player.shoot
-    @shot_sound.play
-    @bullets << b if b
+  if Gosu.button_down?(Gosu::KB_RETURN)
+   b = @player.shoot
+   @shot_sound.play
+   @bullets << b if b
   end
 
   # ── プレイヤー弾更新 ──
@@ -262,7 +268,12 @@ class ShootingGame
   @enemy_bullets.reject! { |b| !b.alive? }
 
   # ── プレイヤー衝突判定 ──
-  @game_over = true if check_player_collision_with_blocks || check_player_collision_with_enemy_bullets
+  if check_player_collision_with_blocks || check_player_collision_with_enemy_bullets
+
+    @bgm.stop   # ← ゲームオーバーになったらBGM停止
+    @game_over = true
+    
+  end
 end
 
 
@@ -293,10 +304,34 @@ end
   end
 
   def button_down(id)
-    if id == Gosu::KB_R && @game_over
-      initialize(@parent)
-    end
+   if id == Gosu::KB_R && @game_over
+     initialize(@parent)
+   end
   end
+
+  # def button_down(id)
+  # if id == Gosu::KB_RETURN || id == Gosu::KB_ENTER
+  #   b = @player.shoot
+  #   if b
+  #     @shot_sound.play
+  #     @bullets << b
+  #   end
+  # elsif id == Gosu::KB_R && @game_over
+  #   initialize(@window)
+  # end
+
+  # def button_down(id)
+  # case id
+  # when Gosu::KB_RETURN, Gosu::KB_ENTER
+  #   b = @player.shoot
+  #   if b
+  #     @shot_sound.play
+  #     @bullets << b
+  #   end
+  # when Gosu::KB_R
+  #   initialize(@window) if @game_over
+  # end
+  #end
 
   private
 
