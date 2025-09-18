@@ -260,6 +260,7 @@ end
   def check_game_over
     if collision?(0, 0)
       @game_over = true
+      @bgm.stop
     end
   end
 end

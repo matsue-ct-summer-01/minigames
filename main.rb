@@ -2,8 +2,6 @@
 require 'gosu'
 require_relative 'games/tetris/main'
 require_relative 'games/shooting/main'
-require_relative 'core/story'
-require_relative 'core/scene'
 require_relative 'core/dialogue'
 require_relative 'core/sound_manager'
 
@@ -35,50 +33,48 @@ class GameManager < Gosu::Window
 
     @game_state = STATE_STORY
     @dialogue_font = Gosu::Font.new(FONT_SIZE_DIALOGUE)
-    @title_font = Gosu::Font.new(FONT_SIZE_DIALOGUE) # Dialogue font is used for simplicity
-
-    # アセットのロード
+    @title_font = Gosu::Font.new(FONT_SIZE_DIALOGUE)
     @sound_manager = SoundManager.new
     @background_school = Gosu::Image.new('./assets/images/b_school.jpg')
     @background_stone = Gosu::Image.new('./assets/images/b_stone.jpg')
     @player_image = Gosu::Image.new('./assets/images/player.png')
     @inquisitor_image = Gosu::Image.new('./assets/images/inquisitor_01.png')
-    
-    # スコア管理
+
     @game_scores = { tetris: 0, shooting: 0 }
     @total_score = 0
     @last_game_score = 0
-
-    @games_sequence = [
-      { id: :tetris, class: TetrisGame, title: "テトリスの試練", dialogue: "集中しろ。テトリスで機転を試す。\nブロックを完璧に並べてみろ。さあ、どうする？" },
-      { id: :shooting, class: ShootingGame, title: "シューティングの試練", dialogue: "ビビってんじゃねえ！シューティングで度胸見せてこい！\nブロック避けるかブッ壊しちまえ！Z押したら弾撃てっから！" }
+    
+    # 統一されたストーリーデータ（イベントの進行順）
+    @story_data = [
+      # オープニングストーリー
+      { type: :dialogue, content: "暗い場所で意識を取り戻す。\n\n冷たい石の床、頭上の巨大なアーチ、響くのはかすかな足音。", background: @background_stone, speaker_image: @player_image, text_speed: 2, sound_content: "text_beep", await_input: true },
+      { type: :dialogue, content: "ここが...試練の間、か。", background: @background_stone, speaker_image: @player_image, text_speed: 2, sound_content: "text_beep", await_input: true },
+      # テトリスゲームの開始
+      { type: :dialogue, content: "集中しろ。テトリスで機転を試す。\nブロックを完璧に並べてみろ。さあ、どうする？", background: @background_school, speaker_image: @inquisitor_image, text_speed: 1, sound_content: "text_beep", await_input: true },
+      { type: :game, class: TetrisGame },
+      # シューティングゲームの開始
+      { type: :dialogue, content: "テトリスの試練を突破した。合計スコアは#{@total_score}点だ。", background: @background_stone, speaker_image: @player_image, text_speed: 2, sound_content: "text_beep", await_input: true },
+      { type: :dialogue, content: "ビビってんじゃねえ！シューティングで度胸見せてこい！\nブロック避けるかブッ壊しちまえ！Z押したら弾撃てっから！", background: @background_school, speaker_image: @inquisitor_image, text_speed: 1, sound_content: "text_beep", await_input: true },
+      { type: :game, class: ShootingGame },
+      # エンディング
+      { type: :dialogue, content: "シューティングの試練もクリアした。\nこれで終わりだ。", background: @background_stone, speaker_image: @player_image, text_speed: 2, sound_content: "text_beep", await_input: true }
     ]
-    @current_game_index = 0
+    @current_event_index = 0
 
-    setup_story
+    run_next_event
   end
 
   def update
-    case @game_state
-    when STATE_STORY
-      @story.update
-      if @story.finished?
-        start_game
-      end
-    when STATE_PLAYING
-      @current_game.update
-    end
+    return if @game_state == STATE_END
+    @current_event.update
+    
   end
 
   def draw
     Gosu.draw_rect(0, 0, width, height, Gosu::Color::BLACK)
-
-    case @game_state
-    when STATE_STORY
-      @story.draw
-    when STATE_PLAYING
-      @current_game.draw
-    when STATE_END
+    if @game_state == STATE_STORY || @game_state == STATE_PLAYING
+      @current_event.draw
+    elsif @game_state == STATE_END
       @background_school.draw(0, 0, 0)
       draw_end_screen
     end
@@ -88,15 +84,11 @@ class GameManager < Gosu::Window
   def button_down(id)
     case @game_state
     when STATE_STORY
-      @story.button_down(id)
-    when STATE_PLAYING
-      if id == Gosu::KB_ESCAPE
-        @game_state = STATE_STORY
-        @current_game = nil
-        self.width, self.height = GAME_WIDTH, GAME_HEIGHT
-      else
-        @current_game.button_down(id)
+      if @current_event.button_down(id)
+        run_next_event
       end
+    when STATE_PLAYING
+      @current_event.button_down(id)
     when STATE_END
       if id == Gosu::KB_RETURN || id == Gosu::KB_ENTER
         close
@@ -105,84 +97,46 @@ class GameManager < Gosu::Window
   end
 
   def on_game_over(score)
-    game_key = @games_sequence[@current_game_index][:id]
-    @game_scores[game_key] = score
     @last_game_score = score
     @total_score += score
-    switch_to_next_stage
+    run_next_event
   end
 
   private
-
- def setup_story
-    dialogues_for_next_stage = []
-    current_game_data = @games_sequence[@current_game_index]
-
-    if @current_game_index == 0
-      dialogues_for_next_stage << {
-        elements: [
-          { type: :text, content: "暗い場所で意識を取り戻す。\n\n冷たい石の床、頭上の巨大なアーチ、響くのはかすかな足音。" },
-          { type: :sound, content: "text_beep" },
-          { type: :text, content: "ここが...試練の間、か。" }
-        ],
-        speaker_image: @player_image,
-        dialogue_font: @dialogue_font,
-        sound_manager: @sound_manager,
-        text_speed: 2 # プレイヤーの速度を設定
-      }
-    else
-      dialogues_for_next_stage << {
-        elements: [
-          { type: :text, content: "試練を突破した。合計スコアは#{@total_score}点だ。" },
-          { type: :sound, content: "text_beep" },
-          { type: :text, content: "次の扉へと進む。" }
-        ],
-        speaker_image: @player_image,
-        dialogue_font: @dialogue_font,
-        sound_manager: @sound_manager,
-        text_speed: 2 # プレイヤーの速度を設定
-      }
-    end
-
-    # ミニゲーム開始前のダイアログ
-    dialogues_for_next_stage << {
-      elements: [
-        { type: :text, content: current_game_data[:dialogue] }
-      ],
-      speaker_image: @inquisitor_image,
-      dialogue_font: @dialogue_font,
-      sound_manager: @sound_manager,
-      text_speed: 1 # 審問官は早口にしたいので1に設定
-    }
-
-    story_scenes = [
-      {
-        background: @background_school,
-        dialogues: dialogues_for_next_stage
-      }
-    ]
-    @story = Story.new(scenes_data: story_scenes, window: self)
-    @game_state = STATE_STORY
-  end
-
-  def start_game
-    game_class = @games_sequence[@current_game_index][:class]
-    size = game_class.window_size
-    self.width, self.height = size[:width], size[:height]
-    @current_game = game_class.new(self)
-    @game_state = STATE_PLAYING
-  end
-
-  def switch_to_next_stage
-    @current_game_index += 1
-    if @current_game_index >= @games_sequence.length
+  
+  def run_next_event
+    if @current_event_index >= @story_data.length
       @game_state = STATE_END
       self.width, self.height = GAME_WIDTH, GAME_HEIGHT
-    else
-      self.width, self.height = GAME_WIDTH, GAME_HEIGHT
-      setup_story
+      return
     end
-    @current_game = nil
+
+    event = @story_data[@current_event_index]
+    
+    case event[:type]
+    when :dialogue
+      self.width, self.height = GAME_WIDTH, GAME_HEIGHT
+      @current_event = Dialogue.new(
+        content: event[:content],
+        background: event[:background],
+        speaker_image: event[:speaker_image],
+        dialogue_font: @dialogue_font,
+        sound_manager: @sound_manager,
+        text_speed: event[:text_speed],
+        sound_content: event[:sound_content],
+        await_input: event[:await_input],
+        window: self
+      )
+      @game_state = STATE_STORY
+      @current_event_index += 1
+    when :game
+      game_class = event[:class]
+      size = game_class.window_size
+      self.width, self.height = size[:width], size[:height]
+      @current_event = game_class.new(self)
+      @game_state = STATE_PLAYING
+      @current_event_index += 1
+    end
   end
 
   def draw_scores
