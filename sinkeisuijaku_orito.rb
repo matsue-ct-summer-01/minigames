@@ -1,10 +1,11 @@
 require 'gosu'
 
 class Card
-  attr_reader :value, :x, :y, :size, :is_flipped, :is_matched, :id
+  attr_reader :value, :x, :y, :size, :is_flipped, :is_matched, :id, :image
 
-  def initialize(value, x, y, size, id)
+  def initialize(value, image, x, y, size, id)
     @value = value
+    @image = image
     @x, @y = x, y
     @size = size
     @is_flipped = false
@@ -34,9 +35,10 @@ class Card
     Gosu.draw_rect(@x + 2, @y + 2, @size - 4, @size - 4, Gosu::Color::BLACK)
 
     if @is_flipped || @is_matched
-      text_x = @x + (@size - font.text_width(@value.to_s)) / 2
-      text_y = @y + (@size - font.height) / 2
-      font.draw_text(@value.to_s, text_x, text_y, 0, 1.0, 1.0, Gosu::Color::WHITE)
+      # 画像がカードサイズに合うようにスケーリング
+      image_scale_x = (@size - 4) / @image.width.to_f
+      image_scale_y = (@size - 4) / @image.height.to_f
+      @image.draw(@x + 2, @y + 2, 0, image_scale_x, image_scale_y)
     end
   end
 
@@ -64,14 +66,25 @@ class MemoryGame < Gosu::Window
     @ai_action = nil
     
     @card_size = 90
-    @card_font = Gosu::Font.new(self, "Arial", (@card_size * 0.8).to_i)
     @message_font = Gosu::Font.new(self, "Arial", 20)
+
+     # 背景画像を読み込む
+    @background_image = Gosu::Image.new("images/haikei.jpg")
+    
+    # 画像ファイルのパスを指定
+    image_paths = [
+      "images/bone.png","images/chusha.png","images/normal.png","images/hurisubi-.png",
+      "images/kanshoku.png","images/meal.png","images/ote.png","images/bigball.png"
+    ]
+
+    @images = image_paths.map { |path| Gosu::Image.new(path) }
     
     setup_board
   end
 
   def setup_board
-    values = (1..8).to_a * 2
+    # 各画像に0-7の値を割り当てる
+    values = (0..7).to_a * 2
     values.shuffle!
     padding = 10
     
@@ -83,7 +96,15 @@ class MemoryGame < Gosu::Window
         card_id = row * 4 + col
         x = col * (@card_size + padding) + start_x
         y = row * (@card_size + padding) + start_y
-        @cards << Card.new(values.pop, x, y, @card_size, card_id)
+        
+        # 配列から画像のインデックスを取得
+        image_index = values.pop
+        
+        # カードのvalueは1-8、画像はインデックスで紐づける
+        card_value = image_index + 1
+        card_image = @images[image_index]
+        
+        @cards << Card.new(card_value, card_image, x, y, @card_size, card_id)
       end
     end
   end
@@ -93,21 +114,28 @@ class MemoryGame < Gosu::Window
   end
 
   def draw
-    @cards.each { |card| card.draw(@card_font) }
+    # ここで背景画像を描画
+    # 画像がウィンドウ全体を覆うようにスケーリングする
+    scale_x = self.width.to_f / @background_image.width
+    scale_y = self.height.to_f / @background_image.height
+    @background_image.draw(0, 0, 0, scale_x, scale_y)
+
+    @cards.each { |card| card.draw(@message_font) }
     
-    @message_font.draw_text("現在のスコア: #{@player_score}点", 10, 10, 0, 1.0, 1.0, Gosu::Color::YELLOW)
+    @message_font.draw_text("現在のスコア: #{@player_score}点", 10, 10, 0, 1.0, 1.0, Gosu::Color::BLACK)
     
     if @game_over
       win_message = "ゲーム終了！"
-      @message_font.draw_text(win_message, 10, 430, 0, 1.0, 1.0, Gosu::Color::YELLOW)
-      @message_font.draw_text("最終スコア: #{@player_score}点", 10, 450, 0, 1.0, 1.0, Gosu::Color::YELLOW)
+      @message_font.draw_text(win_message, 10, 430, 0, 1.0, 1.0, Gosu::Color::RED)
+      @message_font.draw_text("最終スコア: #{@player_score}点", 10, 450, 0, 1.0, 1.0, Gosu::Color::BLACK)
     else
-      @message_font.draw_text(@message, 10, 450, 0, 1.0, 1.0, Gosu::Color::YELLOW)
+      @message_font.draw_text(@message, 10, 450, 0, 1.0, 1.0, Gosu::Color::BLACK)
     end
   end
 
   def update
     if @game_over
+      # @parent.on_game_over(@score) # この行はコメントアウトまたは削除
       return
     end
 
@@ -160,40 +188,40 @@ class MemoryGame < Gosu::Window
   end
   
   def check_pair
-  card1, card2 = @flipped_cards
-  
-  if card1.value == card2.value
-    card1.match!
-    card2.match!
-    @matched_pairs += 1
+    card1, card2 = @flipped_cards
     
-    if @current_turn == :player
-      @player_combo_count += 1
-      case @player_combo_count
-      when 1
-        @player_score += 1000
-      when 2
-        @player_score += 2000
+    if card1.value == card2.value
+      card1.match!
+      card2.match!
+      @matched_pairs += 1
+      
+      if @current_turn == :player
+        @player_combo_count += 1
+        case @player_combo_count
+        when 1
+          @player_score += 1000
+        when 2
+          @player_score += 2000
+        else
+          @player_score += 3000
+        end
+        @message = "ペアを見つけました！ポイント獲得！"
       else
-        @player_score += 3000
+        # コンピュータのペア発見時のメッセージを削除
       end
-      @message = "ペアを見つけました！ボーナス！"
+      
+      if @matched_pairs == 8
+        @game_over = true
+      end
+      return true
     else
-      # コンピュータのペア発見時のメッセージを削除
+      card1.flip_back!
+      card2.flip_back!
+      @player_combo_count = 0
+      @message = "ちがいます..."
+      return false
     end
-    
-    if @matched_pairs == 8
-      @game_over = true
-    end
-    return true
-  else
-    card1.flip_back!
-    card2.flip_back!
-    @player_combo_count = 0
-    @message = "ちがいます..."
-    return false
   end
-end
 
   def switch_turn
     @current_turn = (@current_turn == :player ? :computer : :player)
