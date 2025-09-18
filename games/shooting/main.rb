@@ -28,6 +28,7 @@ class ShootingGame
       @x = WINDOW_WIDTH / 2 - @w / 2#初期座標
       @y = WINDOW_HEIGHT - @h - 10
       @cooldown = 0
+      @image = Gosu::Image.new("assets/images/player.png", retro: true) 
     end
 
     def update
@@ -50,8 +51,18 @@ class ShootingGame
     end
 
     def draw(window)
-      window.draw_rect(@x, @y, @w, @h, Gosu::Color.rgba(80, 160, 255, 255), 1)
-      window.draw_rect(@x + 8, @y + 8, @w - 16, @h - 16, Gosu::Color.rgba(30, 30, 30, 255), 2)
+      #window.draw_rect(@x, @y, @w, @h, Gosu::Color.rgba(80, 160, 255, 255), 1)
+      #window.draw_rect(@x + 8, @y + 8, @w - 16, @h - 16, Gosu::Color.rgba(30, 30, 30, 255), 2)
+  
+      # 20x20 に縮小して描画
+      @image.draw_as_quad(
+        @x,         @y,          Gosu::Color::WHITE,
+        @x + @w,    @y,          Gosu::Color::WHITE,
+        @x,         @y + @h,     Gosu::Color::WHITE,
+        @x + @w,    @y + @h,     Gosu::Color::WHITE,
+        1
+      )
+
     end
 
     def shoot
