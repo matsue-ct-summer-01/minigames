@@ -4,29 +4,17 @@ require 'gosu'
 class SoundManager
   def initialize
     @sounds = {}
-    load_sounds
+    sound_files = Dir.glob('./assets/sounds/*.{wav,mp3}')
+    sound_files.each do |file|
+      sound_name = File.basename(file, '.*').to_sym
+      
+      @sounds[sound_name] = Gosu::Sample.new(file)
+    end
   end
 
-  def play(sound_name, volume = 0.3)
+  def play(sound_name)
+    #puts sound_name.to_sym
     sound = @sounds[sound_name.to_sym]
-    if sound
-      sound.play(volume)
-    else
-      puts "Warning: Sound not found: #{sound_name}"
-    end
-  end
-
-  private
-
-  def load_sounds
-    # assets/sounds 以下のmp3ファイルを自動的にロード
-    Dir.glob("assets/sounds/*.mp3").each do |file_path|
-      sound_name = File.basename(file_path, ".*").to_sym
-      begin
-        @sounds[sound_name] = Gosu::Sample.new(file_path)
-      rescue => e
-        puts "Error loading sound file #{file_path}: #{e.message}"
-      end
-    end
+    sound&.play
   end
 end
