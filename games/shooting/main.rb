@@ -105,32 +105,43 @@ class ShootingGame
   end
 
   # ── EnemyBullet ──
-  class EnemyBullet
-    attr_reader :x, :y, :w, :h
-    SPEED = 2.5
-    def initialize(x, y, angle)
-      @x = x
-      @y = y
-      @angle = angle
-      @w = 6
-      @h = 6
-      @alive = true
-    end
+  # ── EnemyBullet ──
+class EnemyBullet
+  attr_reader :x, :y, :w, :h
+  SPEED = 2.5
 
-    def update
-      @x += SPEED * Math.cos(@angle)
-      @y += SPEED * Math.sin(@angle)
-      @alive = false if @x < 0 || @x > ShootingGame::WINDOW_WIDTH || @y < 0 || @y > ShootingGame::WINDOW_HEIGHT
-    end
-
-    def draw(window)
-      window.draw_rect(@x, @y, @w, @h, Gosu::Color::RED, 3)
-    end
-
-    def alive?; @alive; end
-    def destroy; @alive = false; end
-    def rect; [@x, @y, @w, @h]; end
+  def initialize(x, y, angle)
+    @x = x
+    @y = y
+    @angle = angle
+    @w = 12  # 見た目サイズ
+    @h = 12
+    @alive = true
+    @image = Gosu::Image.new("assets/images/star.png", retro: true)
   end
+
+  def update
+    @x += SPEED * Math.cos(@angle)
+    @y += SPEED * Math.sin(@angle)
+    @alive = false if @x < 0 || @x > ShootingGame::WINDOW_WIDTH || @y < 0 || @y > ShootingGame::WINDOW_HEIGHT
+  end
+
+  def draw(window)
+    @image.draw(@x, @y, 3, @w.to_f / @image.width, @h.to_f / @image.height)
+  end
+
+  # 当たり判定用の矩形を小さくする
+  def rect
+    margin_x = @w * 0.25
+    margin_y = @h * 0.25
+    [@x + margin_x, @y + margin_y, @w * 0.5, @h * 0.5]
+  end
+
+  def alive?; @alive; end
+  def destroy; @alive = false; end
+end
+
+
 
   # ── Block ──
   class Block
