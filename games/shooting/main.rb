@@ -29,6 +29,7 @@ class ShootingGame
       @x = WINDOW_WIDTH / 2 - @w / 2#初期座標
       @y = WINDOW_HEIGHT - @h - 10
       @cooldown = 0
+      @image = Gosu::Image.new("assets/images/player.png", retro: true) 
     end
 
     def update
@@ -51,8 +52,18 @@ class ShootingGame
     end
 
     def draw(window)
-      window.draw_rect(@x, @y, @w, @h, Gosu::Color.rgba(80, 160, 255, 255), 1)
-      window.draw_rect(@x + 8, @y + 8, @w - 16, @h - 16, Gosu::Color.rgba(30, 30, 30, 255), 2)
+      #window.draw_rect(@x, @y, @w, @h, Gosu::Color.rgba(80, 160, 255, 255), 1)
+      #window.draw_rect(@x + 8, @y + 8, @w - 16, @h - 16, Gosu::Color.rgba(30, 30, 30, 255), 2)
+  
+      # 20x20 に縮小して描画
+      @image.draw_as_quad(
+        @x,         @y,          Gosu::Color::WHITE,
+        @x + @w,    @y,          Gosu::Color::WHITE,
+        @x,         @y + @h,     Gosu::Color::WHITE,
+        @x + @w,    @y + @h,     Gosu::Color::WHITE,
+        1
+      )
+
     end
 
     def shoot
@@ -179,9 +190,10 @@ class ShootingGame
     end
   end
 
-  # ── ShootingGame インスタンス ──
-  def initialize(window)
-    @parent = window # 親ウィンドウのインスタンスを保存
+  # ── ShootingGame インスタンス
+  def initialize(window,parent = nil)
+    @window = window
+    @parent = parent
     @player = Player.new
     @bullets = []
     @enemy_bullets = []
@@ -191,49 +203,68 @@ class ShootingGame
     @spawn_timer = 0
     @score = 0
     @game_over = false
+
+    @bgm = Gosu::Song.new("assets/sounds/shooting.mp3")
+    @bgm.play(true)
+    @shot_sound = Gosu::Sample.new("assets/sounds/shooting_shot.mp3")
+    @bomb_sound = Gosu::Sample.new("assets/sounds/shooting_bomb.mp3")
+    
   end
 
   def update
-    return if @game_over
+  return if @game_over
 
-    @player.update
-    if Gosu.button_down?(Gosu::KB_Z)
-      b = @player.shoot
-      @bullets << b if b
-    end
+  # ── プレイヤー更新 ──
+  @player.update
+  if Gosu.button_down?(Gosu::KB_Z)
+    b = @player.shoot
+    @shot_sound.play
+    @bullets << b if b
+  end
 
-    @bullets.each(&:update)
-    @bullets.reject! { |b| !b.alive? }
+  # ── プレイヤー弾更新 ──
+  @bullets.each(&:update)
+  @bullets.reject! { |b| !b.alive? }
 
-    @spawn_timer += 1
-    if @spawn_timer >= SPAWN_INTERVAL
-      col = rand(0...COLUMNS)
-      @falling_blocks << Block.new(col, -BLOCK_SIZE, true)
-      @spawn_timer = 0
-    end
+  # ── ブロック生成 ──
+  @spawn_timer += 1
+  if @spawn_timer >= SPAWN_INTERVAL
+    col = rand(0...COLUMNS)
+    @falling_blocks << Block.new(col, -BLOCK_SIZE, true)
+    @spawn_timer = 0
+  end
 
-    @falling_blocks.each { |blk| blk.update(@landed_heights, @landed_blocks, @enemy_bullets) }
-    @falling_blocks.reject! { |blk| !blk.falling }
+  # ── ブロック更新 ──
+  @falling_blocks.each { |blk| blk.update(@landed_heights, @landed_blocks, @enemy_bullets) }
 
-    # プレイヤー弾とブロック
-    @bullets.each do |b|
-      (@falling_blocks + @landed_blocks.flatten).each do |blk|
-        next unless blk.alive?
-        if collide_rect?(b.rect, blk.rect)
-          blk.destroy
-          b.destroy
-          @score += 100*FALL_SPEED
-        end
+  # ── プレイヤー弾とブロックの衝突判定 ──
+  @bullets.each do |b|
+    (@falling_blocks + @landed_blocks.flatten).each do |blk|
+      next unless blk.alive?
+      if collide_rect?(b.rect, blk.rect)
+        blk.destroy
+        b.destroy
+        @bomb_sound.play
+        @score += 100
       end
     end
-
-    # 敵弾
-    @enemy_bullets.each(&:update)
-    @enemy_bullets.reject! { |b| !b.alive? }
-
-    # 衝突判定
-    @game_over = true if check_player_collision_with_blocks || check_player_collision_with_enemy_bullets
   end
+
+  # ── 配列から破壊済みブロックを削除 ──
+  @falling_blocks.reject! { |blk| !blk.alive? }
+  @landed_blocks.each { |col| col.reject! { |blk| !blk.alive? } }
+
+  # ── 落下が終わったブロックだけ @falling_blocks から除外 ──
+  @falling_blocks.reject! { |blk| !blk.falling }
+
+  # ── 敵弾更新 ──
+  @enemy_bullets.each(&:update)
+  @enemy_bullets.reject! { |b| !b.alive? }
+
+  # ── プレイヤー衝突判定 ──
+  @game_over = true if check_player_collision_with_blocks || check_player_collision_with_enemy_bullets
+end
+
 
   def draw
     # 描画オブジェクトを親から取得
