@@ -16,7 +16,7 @@ class GameManager < Gosu::Window
 
   def initialize
     super 640, 480
-    self.caption = 'エーテル界の試練'
+    self.caption = '試練'
 
     @game_state = STATE_STORY_INTRO
     @font = Gosu::Font.new(30)
@@ -65,7 +65,7 @@ class GameManager < Gosu::Window
         x: 540,
         y: 100,
         image: Gosu::Image.new('./assets/images/inquisitor_01.png'),
-        dialogue: "ビビってんじゃねえ！シューティングで度胸見せてこい！\nブロック避けるかブッ壊しちまえ！Z押したら弾撃てっから！"
+        dialogue: "ビビってんじゃねえ！シューティングで度胸見せてこい！\nブロック避けるかブッ壊しちまえ！Z押したら弾撃てっから！",
         class: ShootingGame,
         played: false
       }
