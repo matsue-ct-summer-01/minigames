@@ -114,10 +114,11 @@ class EnemyBullet
     @x = x
     @y = y
     @angle = angle
-    @w = 12  # 見た目サイズ
-    @h = 12
+    @w = 16
+    @h = 16
     @alive = true
-    @image = Gosu::Image.new("assets/images/star.png", retro: true)
+    # 画像読み込み（retro: trueでピクセル感を維持）
+    @image = Gosu::Image.new("assets/images/shooting_star.png", retro: true)
   end
 
   def update
@@ -127,20 +128,14 @@ class EnemyBullet
   end
 
   def draw(window)
+    # 画像を現在のサイズに合わせて描画
     @image.draw(@x, @y, 3, @w.to_f / @image.width, @h.to_f / @image.height)
-  end
-
-  # 当たり判定用の矩形を小さくする
-  def rect
-    margin_x = @w * 0.25
-    margin_y = @h * 0.25
-    [@x + margin_x, @y + margin_y, @w * 0.5, @h * 0.5]
   end
 
   def alive?; @alive; end
   def destroy; @alive = false; end
+  def rect; [@x, @y, @w, @h]; end
 end
-
 
 
   # ── Block ──
