@@ -172,7 +172,7 @@ class ShootingGame
           angle = 2 * Math::PI * i / shots
           enemy_bullets << EnemyBullet.new(@x + @size / 2, @y + @size / 2, angle)
         end
-        @shoot_cooldown = rand(120..240)
+        @shoot_cooldown = rand(300..400)
       end
     end
 
@@ -216,10 +216,10 @@ class ShootingGame
 
   # ── プレイヤー更新 ──
   @player.update
-  if Gosu.button_down?(Gosu::KB_Z)
-    b = @player.shoot
-    @shot_sound.play
-    @bullets << b if b
+  if Gosu.button_down?(Gosu::KB_RETURN)
+   b = @player.shoot
+   @shot_sound.play
+   @bullets << b if b
   end
 
   # ── プレイヤー弾更新 ──
@@ -262,7 +262,12 @@ class ShootingGame
   @enemy_bullets.reject! { |b| !b.alive? }
 
   # ── プレイヤー衝突判定 ──
-  @game_over = true if check_player_collision_with_blocks || check_player_collision_with_enemy_bullets
+  if check_player_collision_with_blocks || check_player_collision_with_enemy_bullets
+
+    @bgm.stop   # ← ゲームオーバーになったらBGM停止
+    @game_over = true
+    
+  end
 end
 
 
@@ -293,10 +298,34 @@ end
   end
 
   def button_down(id)
-    if id == Gosu::KB_R && @game_over
-      initialize(@parent)
-    end
+   if id == Gosu::KB_R && @game_over
+     initialize(@parent)
+   end
   end
+
+  # def button_down(id)
+  # if id == Gosu::KB_RETURN || id == Gosu::KB_ENTER
+  #   b = @player.shoot
+  #   if b
+  #     @shot_sound.play
+  #     @bullets << b
+  #   end
+  # elsif id == Gosu::KB_R && @game_over
+  #   initialize(@window)
+  # end
+
+  # def button_down(id)
+  # case id
+  # when Gosu::KB_RETURN, Gosu::KB_ENTER
+  #   b = @player.shoot
+  #   if b
+  #     @shot_sound.play
+  #     @bullets << b
+  #   end
+  # when Gosu::KB_R
+  #   initialize(@window) if @game_over
+  # end
+  #end
 
   private
 
