@@ -206,51 +206,64 @@ class ShootingGame
     @bgm = Gosu::Song.new("assets/sounds/shooting.mp3")
     @bgm.play(true)
     @shot_sound = Gosu::Sample.new("assets/sounds/shooting_shot.mp3")
+    @bomb_sound = Gosu::Sample.new("assets/sounds/shooting_bomb.mp3")
     
   end
 
   def update
-    return if @game_over
+  return if @game_over
 
-    @player.update
-    if Gosu.button_down?(Gosu::KB_Z)
-      b = @player.shoot
-      @shot_sound.play
-      @bullets << b if b
-    end
+  # ── プレイヤー更新 ──
+  @player.update
+  if Gosu.button_down?(Gosu::KB_Z)
+    b = @player.shoot
+    @shot_sound.play
+    @bullets << b if b
+  end
 
-    @bullets.each(&:update)
-    @bullets.reject! { |b| !b.alive? }
+  # ── プレイヤー弾更新 ──
+  @bullets.each(&:update)
+  @bullets.reject! { |b| !b.alive? }
 
-    @spawn_timer += 1
-    if @spawn_timer >= SPAWN_INTERVAL
-      col = rand(0...COLUMNS)
-      @falling_blocks << Block.new(col, -BLOCK_SIZE, true)
-      @spawn_timer = 0
-    end
+  # ── ブロック生成 ──
+  @spawn_timer += 1
+  if @spawn_timer >= SPAWN_INTERVAL
+    col = rand(0...COLUMNS)
+    @falling_blocks << Block.new(col, -BLOCK_SIZE, true)
+    @spawn_timer = 0
+  end
 
-    @falling_blocks.each { |blk| blk.update(@landed_heights, @landed_blocks, @enemy_bullets) }
-    @falling_blocks.reject! { |blk| !blk.falling }
+  # ── ブロック更新 ──
+  @falling_blocks.each { |blk| blk.update(@landed_heights, @landed_blocks, @enemy_bullets) }
 
-    # プレイヤー弾とブロック
-    @bullets.each do |b|
-      (@falling_blocks + @landed_blocks.flatten).each do |blk|
-        next unless blk.alive?
-        if collide_rect?(b.rect, blk.rect)
-          blk.destroy
-          b.destroy
-          @score += 100
-        end
+  # ── プレイヤー弾とブロックの衝突判定 ──
+  @bullets.each do |b|
+    (@falling_blocks + @landed_blocks.flatten).each do |blk|
+      next unless blk.alive?
+      if collide_rect?(b.rect, blk.rect)
+        blk.destroy
+        b.destroy
+        @bomb_sound.play
+        @score += 100
       end
     end
-
-    # 敵弾
-    @enemy_bullets.each(&:update)
-    @enemy_bullets.reject! { |b| !b.alive? }
-
-    # 衝突判定
-    @game_over = true if check_player_collision_with_blocks || check_player_collision_with_enemy_bullets
   end
+
+  # ── 配列から破壊済みブロックを削除 ──
+  @falling_blocks.reject! { |blk| !blk.alive? }
+  @landed_blocks.each { |col| col.reject! { |blk| !blk.alive? } }
+
+  # ── 落下が終わったブロックだけ @falling_blocks から除外 ──
+  @falling_blocks.reject! { |blk| !blk.falling }
+
+  # ── 敵弾更新 ──
+  @enemy_bullets.each(&:update)
+  @enemy_bullets.reject! { |b| !b.alive? }
+
+  # ── プレイヤー衝突判定 ──
+  @game_over = true if check_player_collision_with_blocks || check_player_collision_with_enemy_bullets
+end
+
 
   def draw
     window = @window
