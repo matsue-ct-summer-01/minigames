@@ -67,19 +67,33 @@ class MemoryGame < Gosu::Window
     
     @card_size = 90
     @message_font = Gosu::Font.new(self, "Arial", 20)
-
-     # 背景画像を読み込む
-    @background_image = Gosu::Image.new("images/haikei.jpg")
     
+    # 背景画像を読み込む
+    @background_image = Gosu::Image.new("C:\\ruby_lecture\\code\\minigames\\images\\haikei.jpg")
+
     # 画像ファイルのパスを指定
     image_paths = [
-      "images/bone.png","images/chusha.png","images/normal.png","images/hurisubi-.png",
-      "images/kanshoku.png","images/meal.png","images/ote.png","images/bigball.png"
+      "C:\\ruby_lecture\\code\\minigames\\images\\bone.png",
+      "C:\\ruby_lecture\\code\\minigames\\images\\chusha.png",
+      "C:\\ruby_lecture\\code\\minigames\\images\\normal.png",
+      "C:\\ruby_lecture\\code\\minigames\\images\\hurisubi-.png",
+      "C:\\ruby_lecture\\code\\minigames\\images\\kanshoku.png",
+      "C:\\ruby_lecture\\code\\minigames\\images\\meal.png",
+      "C:\\ruby_lecture\\code\\minigames\\images\\ote.png",
+      "C:\\ruby_lecture\\code\\minigames\\images\\bigball.png"
     ]
-
+    
     @images = image_paths.map { |path| Gosu::Image.new(path) }
+
+    # === 効果音の追加 ===
+    @bgm = Gosu::Song.new("C:\\ruby_lecture\\code\\minigames\\sounds\\bgm.wav")
+    @flip_sound = Gosu::Sample.new("C:\\ruby_lecture\\code\\minigames\\sounds\\flip.wav")
+    @match_sound_1 = Gosu::Sample.new("C:\\ruby_lecture\\code\\minigames\\sounds\\match1.wav")
+    @match_sound_2 = Gosu::Sample.new("C:\\ruby_lecture\\code\\minigames\\sounds\\match2.wav")
+    @match_sound_3 = Gosu::Sample.new("C:\\ruby_lecture\\code\\minigames\\sounds\\match3.wav")
     
     setup_board
+    @bgm.play(true) # trueでループ再生
   end
 
   def setup_board
@@ -114,28 +128,27 @@ class MemoryGame < Gosu::Window
   end
 
   def draw
-    # ここで背景画像を描画
-    # 画像がウィンドウ全体を覆うようにスケーリングする
+    # 背景画像を描画
     scale_x = self.width.to_f / @background_image.width
     scale_y = self.height.to_f / @background_image.height
     @background_image.draw(0, 0, 0, scale_x, scale_y)
-
+    
+    # カードやスコアなどの描画はここから
     @cards.each { |card| card.draw(@message_font) }
     
-    @message_font.draw_text("現在のスコア: #{@player_score}点", 10, 10, 0, 1.0, 1.0, Gosu::Color::BLACK)
+    @message_font.draw_text("現在のスコア: #{@player_score}点", 10, 10, 0, 1.0, 1.0, Gosu::Color::YELLOW)
     
     if @game_over
       win_message = "ゲーム終了！"
-      @message_font.draw_text(win_message, 10, 430, 0, 1.0, 1.0, Gosu::Color::RED)
-      @message_font.draw_text("最終スコア: #{@player_score}点", 10, 450, 0, 1.0, 1.0, Gosu::Color::BLACK)
+      @message_font.draw_text(win_message, 10, 430, 0, 1.0, 1.0, Gosu::Color::YELLOW)
+      @message_font.draw_text("最終スコア: #{@player_score}点", 10, 450, 0, 1.0, 1.0, Gosu::Color::YELLOW)
     else
-      @message_font.draw_text(@message, 10, 450, 0, 1.0, 1.0, Gosu::Color::BLACK)
+      @message_font.draw_text(@message, 10, 450, 0, 1.0, 1.0, Gosu::Color::YELLOW)
     end
   end
 
   def update
     if @game_over
-      # @parent.on_game_over(@score) # この行はコメントアウトまたは削除
       return
     end
 
@@ -168,7 +181,6 @@ class MemoryGame < Gosu::Window
     if @flipped_cards.empty?
       @ai_action = find_card_to_flip
       flip_card(@ai_action[0])
-      @message = "コンピュータがめくったカード: #{@flipped_cards[0].value}"
       @timer = Gosu::milliseconds
       return
     end
@@ -176,7 +188,6 @@ class MemoryGame < Gosu::Window
     # 2枚目をめくる
     if @flipped_cards.size == 1 && Gosu.milliseconds - @timer > 1000
       flip_card(@ai_action[1])
-      @message = "コンピュータがめくったカード: #{@flipped_cards[0].value} と #{@flipped_cards[1].value}"
       @timer = Gosu::milliseconds
     end
   end
@@ -185,6 +196,8 @@ class MemoryGame < Gosu::Window
     card.flip!
     @flipped_cards << card
     @known_cards[card.id] = card.value
+    # === カードをめくる音を再生 ===
+    @flip_sound.play
   end
   
   def check_pair
@@ -200,14 +213,18 @@ class MemoryGame < Gosu::Window
         case @player_combo_count
         when 1
           @player_score += 1000
+          # === 1連続目のペア成立音 ===
+          @match_sound_1.play
         when 2
           @player_score += 2000
+          # === 2連続目のペア成立音 ===
+          @match_sound_2.play
         else
           @player_score += 3000
+          # === 3連続以上のペア成立音 ===
+          @match_sound_3.play
         end
         @message = "ペアを見つけました！ポイント獲得！"
-      else
-        # コンピュータのペア発見時のメッセージを削除
       end
       
       if @matched_pairs == 8
@@ -242,11 +259,9 @@ class MemoryGame < Gosu::Window
         flip_card(card)
         
         if @flipped_cards.size == 1
-            @message = "あなたがめくったカード: #{card.value}"
         elsif @flipped_cards.size == 2
             @timer = Gosu::milliseconds
             card1, card2 = @flipped_cards
-            @message = "あなたがめくったカード: #{card1.value} と #{card2.value}"
         end
         break
       end
