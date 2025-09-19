@@ -6,6 +6,7 @@ require_relative 'core/dialogue'
 require_relative 'core/sound_manager'
 require_relative './soccer-pk-animation2'
 require_relative './sinkeisuijaku_orito'
+
 class GameManager < Gosu::Window
   # ゲームの状態
   STATE_STORY = :story
@@ -45,31 +46,32 @@ class GameManager < Gosu::Window
     @total_score = 0
     @last_game_score = 0
     
-    # BGMファイルを読み込み、再生します
-    # @bgm = Gosu::Song.new('./assets/sounds/bgm_loop.wav')
-    # @bgm.play(true)
-
     # 統一されたストーリーデータ（イベントの進行順）
     @story_data = [
       # オープニングストーリー
-      { type: :sound, data: "shooting_shot" }, # 効果音をtext指定に変更
+      { type: :sound, data: "shooting_shot" },
       { type: :dialogue, content: "暗い場所で意識を取り戻す。\n\n冷たい石の床、頭上の巨大なアーチ、響くのはかすかな足音。", background: @background_stone, speaker_image: @player_image, text_speed: 2, sound_content: "text_beep", await_input: true },
       { type: :dialogue, content: "ここが...試練の間、か。", background: @background_stone, speaker_image: @player_image, text_speed: 2, sound_content: "text_beep", await_input: true },
       # テトリスゲームの開始
       { type: :dialogue, content: "集中しろ。テトリスで機転を試す。\nブロックを完璧に並べてみろ。さあ、どうする？", background: @background_school, speaker_image: @inquisitor_image, text_speed: 1, sound_content: "text_beep", await_input: true },
       
-      #{ type: :game, class: MemoryGame },
-      { type: :game, class: PKGame },
-
-      { type: :game, class: TetrisGame },
-      { type: :game, class: TetrisGame},
-      # テトリスゲーム後の効果音とストーリー
+      # テトリスゲームとストーリーの間に、スコア表示用のダイアログを挿入
+      { type: :game, class: TetrisGame, name: :tetris },
+      { type: :dialogue, content: "テトリスの試練を突破した。合計スコアは_SCORE_点だ。", background: @background_stone, speaker_image: @player_image, text_speed: 2, sound_content: "text_beep", await_input: true },
       
-      { type: :dialogue, content: "テトリスの試練を突破した。合計スコアは#{@total_score}点だ。", background: @background_stone, speaker_image: @player_image, text_speed: 2, sound_content: "text_beep", await_input: true },
       { type: :dialogue, content: "ビビってんじゃねえ！シューティングで度胸見せてこい！\nブロック避けるかブッ壊しちまえ！Z押したら弾撃てっから！", background: @background_school, speaker_image: @inquisitor_image, text_speed: 1, sound_content: "text_beep", await_input: true },
-      { type: :game, class: ShootingGame },
+      
+      # シューティングゲームとストーリーの間に、スコア表示用のダイアログを挿入
+      { type: :game, class: ShootingGame, name: :shooting },
+      { type: :dialogue, content: "シューティングの試練もクリアした。合計スコアは_SCORE_点だ。", background: @background_stone, speaker_image: @player_image, text_speed: 2, sound_content: "text_beep", await_input: true },
+
+      { type: :dialogue, content: "サッカーPKゲームの試練もクリアした。合計スコアは_SCORE_点だ。", background: @background_stone, speaker_image: @player_image, text_speed: 2, sound_content: "text_beep", await_input: true },
+      { type: :game, class: PKGame, name: :pk },
+
+      { type: :dialogue, content: "神経衰弱の試練もクリアした。合計スコアは_SCORE_点だ。", background: @background_stone, speaker_image: @player_image, text_speed: 2, sound_content: "text_beep", await_input: true },
+      { type: :game, class: MemoryGame, name: :memory },
       # エンディング
-      { type: :dialogue, content: "シューティングの試練もクリアした。\nこれで終わりだ。", background: @background_stone, speaker_image: @player_image, text_speed: 2, sound_content: "text_beep", await_input: true }
+      { type: :dialogue, content: "すべての試練を突破した。\nこれで終わりだ。", background: @background_stone, speaker_image: @player_image, text_speed: 2, sound_content: "text_beep", await_input: true }
     ]
     @current_event_index = 0
 
@@ -119,7 +121,6 @@ class GameManager < Gosu::Window
     if @current_event_index >= @story_data.length
       @game_state = STATE_END
       self.width, self.height = GAME_WIDTH, GAME_HEIGHT
-      # @bgm.stop
       return
     end
 
@@ -128,8 +129,12 @@ class GameManager < Gosu::Window
     case event[:type]
     when :dialogue
       self.width, self.height = GAME_WIDTH, GAME_HEIGHT
+      
+      # 修正: ダイアログの文字列を動的に更新
+      content = event[:content].gsub('_SCORE_', @total_score.to_s)
+      
       @current_event = Dialogue.new(
-        content: event[:content],
+        content: content,
         background: event[:background],
         speaker_image: event[:speaker_image],
         dialogue_font: @dialogue_font,
@@ -171,3 +176,5 @@ end
 if __FILE__ == $0
   GameManager.new.show
 end
+
+# Dialogue, SoundManager クラスは変更なし
