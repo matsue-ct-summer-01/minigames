@@ -11,7 +11,7 @@ class PKGame #< Gosu::Window ###共有時に無効
 
   def initialize(window) ###共有時に有効
     #super(WIDTH, HEIGHT) ###共有時に無効
-    self.caption = "サッカー PK対決"
+    #self.caption = "サッカー PK対決"
   
     @haikei_image = Gosu::Image.new("./assets/images/penaltyarea.png")
     #@haikei_image = Gosu::Image.new("PKgame_img/penaltyarea.png")

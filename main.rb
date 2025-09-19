@@ -4,7 +4,8 @@ require_relative 'games/tetris/main'
 require_relative 'games/shooting/main'
 require_relative 'core/dialogue'
 require_relative 'core/sound_manager'
-
+require_relative './soccer-pk-animation2'
+require_relative './sinkeisuijaku_orito'
 class GameManager < Gosu::Window
   # ゲームの状態
   STATE_STORY = :story
@@ -56,7 +57,12 @@ class GameManager < Gosu::Window
       { type: :dialogue, content: "ここが...試練の間、か。", background: @background_stone, speaker_image: @player_image, text_speed: 2, sound_content: "text_beep", await_input: true },
       # テトリスゲームの開始
       { type: :dialogue, content: "集中しろ。テトリスで機転を試す。\nブロックを完璧に並べてみろ。さあ、どうする？", background: @background_school, speaker_image: @inquisitor_image, text_speed: 1, sound_content: "text_beep", await_input: true },
+      
+      #{ type: :game, class: MemoryGame },
+      { type: :game, class: PKGame },
+
       { type: :game, class: TetrisGame },
+      { type: :game, class: TetrisGame},
       # テトリスゲーム後の効果音とストーリー
       
       { type: :dialogue, content: "テトリスの試練を突破した。合計スコアは#{@total_score}点だ。", background: @background_stone, speaker_image: @player_image, text_speed: 2, sound_content: "text_beep", await_input: true },
