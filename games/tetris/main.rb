@@ -28,7 +28,7 @@ class TetrisGame
   end
 
   def initialize(window)
-    @window = window
+    @parent = window
     
     @block_size = 30
     @board_width = 10
@@ -51,10 +51,11 @@ class TetrisGame
 
   def update
   # ゲームオーバー状態になった瞬間、一度だけ親に通知し、BGMを止める
-  if @game_overon&& !@notified_parent
+  if @game_over
     @bgm.stop
-    @window.on_game_over(@score)
-    @notified_parent = true
+    sleep(3)
+    @parent.on_game_over(@score)
+    return
   end
   
   # ゲームオーバーの場合はこれ以上何も処理しない
@@ -74,7 +75,7 @@ class TetrisGame
 end
 
   def draw
-    Gosu.draw_rect(0, 0, @window.width, @window.height, Gosu::Color::BLACK, ZOrder::BACKGROUND)
+    Gosu.draw_rect(0, 0, @parent.width, @parent.height, Gosu::Color::BLACK, ZOrder::BACKGROUND)
     draw_board
     draw_current_tetromino
 
@@ -121,7 +122,7 @@ end
   def draw_instructions
     text = "操作方法:\n\n←, → : 移動\n↓ : 加速\n↑ : 右回転\nZ, X : 左回転\n\nスコア: #{@score}"
     @font.draw_text(text, @board_width * @block_size + 20, 50, ZOrder::UI, 1.0, 1.0, Gosu::Color::WHITE)
-  
+  end
 
   def new_tetromino
     type = TETROMINOES.keys.sample

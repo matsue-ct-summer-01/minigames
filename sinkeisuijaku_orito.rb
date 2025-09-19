@@ -150,6 +150,8 @@ class MemoryGame
       win_message = "ゲーム終了！"
       @message_font.draw_text(win_message, 10, 430, 0, 1.0, 1.0, Gosu::Color::YELLOW)
       @message_font.draw_text("最終スコア: #{@player_score}点", 10, 450, 0, 1.0, 1.0, Gosu::Color::YELLOW)
+      sleep(3)
+      @bgm.stop
       @window.on_game_over(@player_score) # 親のメソッドを呼び出す
     else
       @message_font.draw_text(@message, 10, 450, 0, 1.0, 1.0, Gosu::Color::YELLOW)
