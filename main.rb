@@ -63,9 +63,10 @@ class GameManager < Gosu::Window
       { type: :dialogue, content: "まじか！", background: @background_school, speaker_image: @player_image, text_speed: @yomiage_speed, sound_content: "text_beep", await_input: true },
       { type: :sound, data: "keen" },
      
+      { type: :dialogue, content: "（まずは知の試練だ。なお、4つの試練は完全オリジナルだ。)", background: @background_school, speaker_image: @player_image, text_speed: @yomiage_speed, sound_content: "text_beep", await_input: true },
+
       { type: :game, class: TetrisGame, name: :tetris },
 
-      { type: :dialogue, content: "（まずは知の試練だ。なお、4つの試練は完全オリジナルだ。)", background: @background_school, speaker_image: @player_image, text_speed: @yomiage_speed, sound_content: "text_beep", await_input: true },
       { type: :dialogue, content: ".....す、すごい!知力が上がるのを感じる!", background: @background_school, speaker_image: @player_image, text_speed: @yomiage_speed, sound_content: "text_beep", await_input: true },
       
       
