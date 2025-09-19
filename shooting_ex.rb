@@ -1,4 +1,4 @@
-# frozen_string_literal: true
+#これはminigames/games/shooting/main.rbにコードの説明を付けた差分です
 require 'gosu'
 
 # -----------------------------
