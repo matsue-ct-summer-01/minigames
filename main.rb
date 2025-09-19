@@ -45,33 +45,71 @@ class GameManager < Gosu::Window
     @game_scores = { tetris: 0, shooting: 0 }
     @total_score = 0
     @last_game_score = 0
-    
+    @yomiage_speed =4
     # 統一されたストーリーデータ（イベントの進行順）
     @story_data = [
       # オープニングストーリー
-      { type: :sound, data: "shooting_shot" },
-      { type: :dialogue, content: "暗い場所で意識を取り戻す。\n\n冷たい石の床、頭上の巨大なアーチ、響くのはかすかな足音。", background: @background_stone, speaker_image: @player_image, text_speed: 2, sound_content: "text_beep", await_input: true },
-      { type: :dialogue, content: "ここが...試練の間、か。", background: @background_stone, speaker_image: @player_image, text_speed: 2, sound_content: "text_beep", await_input: true },
+      { type: :sound, data: "nonki" },#使用上ループできません。
+      { type: :dialogue, content: "はあ、、、\n今日もまた学校がある。", background: @background_school, speaker_image: @player_image, text_speed: @yomiage_speed, sound_content: "text_beep", await_input: true },
+      { type: :dialogue, content: "外は九月のくせに暑いままだし、授業もいまいちやる気が出ないなあ", background: @background_school, speaker_image: @player_image, text_speed: @yomiage_speed, sound_content: "text_beep", await_input: true },
+      { type: :dialogue, content: "もういっそのこと今日は帰ろうかな\n家でゆっくりアニメでも見よ......", background: @background_school, speaker_image: @player_image, text_speed: @yomiage_speed, sound_content: "text_beep", await_input: true },
+      { type: :sound, data: "long_keen" },
+      { type: :dialogue, content: "(おい、そこのお前....)", background: @background_school, speaker_image: @player_image, text_speed: @yomiage_speed, sound_content: "text_beep", await_input: true },
+      { type: :dialogue, content: "うわ!急に頭から謎の声が!!", background: @background_school, speaker_image: @player_image, text_speed: @yomiage_speed, sound_content: "text_beep", await_input: true },
+      { type: :sound, data: "keen" },
+      { type: :dialogue, content: "(私は理想の高専生が具現化した神である)", background: @background_school, speaker_image: @player_image, text_speed: @yomiage_speed, sound_content: "text_beep", await_input: true },
+      { type: :sound, data: "long_keen" },
+      { type: :dialogue, content: "(お前は怠惰すぎる、高専の恥だ)\n(そんなお前に4つの試練を用意した。これらを乗り越えることでお前は成長できるだろう)", background: @background_school, speaker_image: @player_image, text_speed: @yomiage_speed, sound_content: "text_beep", await_input: true },
+      { type: :dialogue, content: "まじか！", background: @background_school, speaker_image: @player_image, text_speed: @yomiage_speed, sound_content: "text_beep", await_input: true },
+      { type: :sound, data: "keen" },
+     
+      { type: :game, class: TetrisGame, name: :tetris },
+
+      { type: :dialogue, content: "（まずは知の試練だ。なお、4つの試練は完全オリジナルだ。)", background: @background_school, speaker_image: @player_image, text_speed: @yomiage_speed, sound_content: "text_beep", await_input: true },
+      { type: :dialogue, content: ".....す、すごい!知力が上がるのを感じる!", background: @background_school, speaker_image: @player_image, text_speed: @yomiage_speed, sound_content: "text_beep", await_input: true },
+      
+      
+      { type: :sound, data: "keen" },
+      { type: :dialogue, content: "（次は力の試練だ。)", background: @background_school, speaker_image: @player_image, text_speed: @yomiage_speed, sound_content: "text_beep", await_input: true },
+      { type: :game, class: ShootingGame, name: :shooting },
+      { type: :dialogue, content: ".....す、すごい!知力が上がるのを感じる!", background: @background_school, speaker_image: @player_image, text_speed: @yomiage_speed, sound_content: "text_beep", await_input: true },
+      
+      
+      { type: :sound, data: "keen" },
+      { type: :dialogue, content: "（次は知の試練だ。)", background: @background_school, speaker_image: @player_image, text_speed: @yomiage_speed, sound_content: "text_beep", await_input: true },
+      { type: :game, class: MemoryGame, name: :memory },
+      { type: :dialogue, content: ".....す、すごい!さらに知力が上がるのを感じる!", background: @background_school, speaker_image: @player_image, text_speed: @yomiage_speed, sound_content: "text_beep", await_input: true },
+       
+      { type: :sound, data: "keen" },
+      { type: :dialogue, content: "（最後に運の試練だ。)", background: @background_school, speaker_image: @player_image, text_speed: @yomiage_speed, sound_content: "text_beep", await_input: true },
+      { type: :dialogue, content: ".....す、すごい!運気が上がるのを感じる!", background: @background_school, speaker_image: @player_image, text_speed: @yomiage_speed, sound_content: "text_beep", await_input: true },
+
+
+      { type: :sound, data: "keen" },
+      { type: :dialogue, content: "（四つの試験をよく乗り越えた。)", background: @background_school, speaker_image: @player_image, text_speed: @yomiage_speed, sound_content: "text_beep", await_input: true },
+      { type: :sound, data: "long_keen" },
+      { type: :dialogue, content: "（これでお前は赤点を回避し、課外活動に積極的になり、\n卒研で担当教員をこまらせることはなくなるだろう。)", background: @background_school, speaker_image: @player_image, text_speed: @yomiage_speed, sound_content: "text_beep", await_input: true },
+      { type: :dialogue, content: "よし!高専生活頑張るぞ!!!", background: @background_school, speaker_image: @player_image, text_speed: @yomiage_speed, sound_content: "text_beep", await_input: true },
+
+
+
+
       # テトリスゲームの開始
-      { type: :dialogue, content: "集中しろ。テトリスで機転を試す。\nブロックを完璧に並べてみろ。さあ、どうする？", background: @background_school, speaker_image: @inquisitor_image, text_speed: 1, sound_content: "text_beep", await_input: true },
       
       # テトリスゲームとストーリーの間に、スコア表示用のダイアログを挿入
-      { type: :game, class: TetrisGame, name: :tetris },
-      { type: :dialogue, content: "テトリスの試練を突破した。合計スコアは_SCORE_点だ。", background: @background_stone, speaker_image: @player_image, text_speed: 2, sound_content: "text_beep", await_input: true },
+      { type: :dialogue, content: "テトリスの試練を突破した。合計スコアは_SCORE_点だ。", background: @background_stone, speaker_image: @player_image, text_speed: @yomiage_speed, sound_content: "text_beep", await_input: true },
       
       { type: :dialogue, content: "ビビってんじゃねえ！シューティングで度胸見せてこい！\nブロック避けるかブッ壊しちまえ！Z押したら弾撃てっから！", background: @background_school, speaker_image: @inquisitor_image, text_speed: 1, sound_content: "text_beep", await_input: true },
       
       # シューティングゲームとストーリーの間に、スコア表示用のダイアログを挿入
-      { type: :game, class: ShootingGame, name: :shooting },
-      { type: :dialogue, content: "シューティングの試練もクリアした。合計スコアは_SCORE_点だ。", background: @background_stone, speaker_image: @player_image, text_speed: 2, sound_content: "text_beep", await_input: true },
+      { type: :dialogue, content: "シューティングの試練もクリアした。合計スコアは_SCORE_点だ。", background: @background_stone, speaker_image: @player_image, text_speed: @yomiage_speed, sound_content: "text_beep", await_input: true },
 
-      { type: :dialogue, content: "サッカーPKゲームの試練もクリアした。合計スコアは_SCORE_点だ。", background: @background_stone, speaker_image: @player_image, text_speed: 2, sound_content: "text_beep", await_input: true },
+      { type: :dialogue, content: "サッカーPKゲームの試練もクリアした。合計スコアは_SCORE_点だ。", background: @background_stone, speaker_image: @player_image, text_speed: @yomiage_speed, sound_content: "text_beep", await_input: true },
       { type: :game, class: PKGame, name: :pk },
 
-      { type: :dialogue, content: "神経衰弱の試練もクリアした。合計スコアは_SCORE_点だ。", background: @background_stone, speaker_image: @player_image, text_speed: 2, sound_content: "text_beep", await_input: true },
-      { type: :game, class: MemoryGame, name: :memory },
+      { type: :dialogue, content: "神経衰弱の試練もクリアした。合計スコアは_SCORE_点だ。", background: @background_stone, speaker_image: @player_image, text_speed: @yomiage_speed, sound_content: "text_beep", await_input: true },
       # エンディング
-      { type: :dialogue, content: "すべての試練を突破した。\nこれで終わりだ。", background: @background_stone, speaker_image: @player_image, text_speed: 2, sound_content: "text_beep", await_input: true }
+      { type: :dialogue, content: "すべての試練を突破した。\nこれで終わりだ。", background: @background_stone, speaker_image: @player_image, text_speed: @yomiage_speed, sound_content: "text_beep", await_input: true }
     ]
     @current_event_index = 0
 
