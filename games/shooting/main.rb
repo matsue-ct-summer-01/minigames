@@ -143,7 +143,7 @@ class ShootingGame
    @alive = true
    @color = random_color
    @fall_speed = FALL_SPEED * rand(0.5..2.0)
-   @shoot_cooldown = rand(60..180)
+   @shoot_cooldown = rand(40..70)
   end
 
   def update(landed_heights, landed_blocks, enemy_bullets)
@@ -167,7 +167,7 @@ class ShootingGame
      angle = 2 * Math::PI * i / shots
      enemy_bullets << EnemyBullet.new(@x + @size / 2, @y + @size / 2, angle)
     end
-    @shoot_cooldown = rand(300..400)
+    @shoot_cooldown = rand(500..700)
    end
   end
 
