@@ -82,6 +82,10 @@ class GameManager < Gosu::Window
        
       { type: :sound, data: "keen" },
       { type: :dialogue, content: "（最後に運の試練だ。)", background: @background_school, speaker_image: @player_image, text_speed: @yomiage_speed, sound_content: "text_beep", await_input: true },
+      
+      
+      { type: :game, class: PKGame, name: :pk },
+
       { type: :dialogue, content: ".....す、すごい!運気が上がるのを感じる!", background: @background_school, speaker_image: @player_image, text_speed: @yomiage_speed, sound_content: "text_beep", await_input: true },
 
 
@@ -90,26 +94,11 @@ class GameManager < Gosu::Window
       { type: :sound, data: "long_keen" },
       { type: :dialogue, content: "（これでお前は赤点を回避し、課外活動に積極的になり、\n卒研で担当教員をこまらせることはなくなるだろう。)", background: @background_school, speaker_image: @player_image, text_speed: @yomiage_speed, sound_content: "text_beep", await_input: true },
       { type: :dialogue, content: "よし!高専生活頑張るぞ!!!", background: @background_school, speaker_image: @player_image, text_speed: @yomiage_speed, sound_content: "text_beep", await_input: true },
+      { type: :dialogue, content: "-FIN-", background: @background_school, speaker_image: @player_image, text_speed: @yomiage_speed, sound_content: "text_beep", await_input: true },
+      { type: :sound, data: "happy_end" },#使用上ループできません。
 
-
-
-
-      # テトリスゲームの開始
-      
-      # テトリスゲームとストーリーの間に、スコア表示用のダイアログを挿入
-      { type: :dialogue, content: "テトリスの試練を突破した。合計スコアは_SCORE_点だ。", background: @background_stone, speaker_image: @player_image, text_speed: @yomiage_speed, sound_content: "text_beep", await_input: true },
-      
-      { type: :dialogue, content: "ビビってんじゃねえ！シューティングで度胸見せてこい！\nブロック避けるかブッ壊しちまえ！Z押したら弾撃てっから！", background: @background_school, speaker_image: @inquisitor_image, text_speed: 1, sound_content: "text_beep", await_input: true },
-      
-      # シューティングゲームとストーリーの間に、スコア表示用のダイアログを挿入
-      { type: :dialogue, content: "シューティングの試練もクリアした。合計スコアは_SCORE_点だ。", background: @background_stone, speaker_image: @player_image, text_speed: @yomiage_speed, sound_content: "text_beep", await_input: true },
-
-      { type: :dialogue, content: "サッカーPKゲームの試練もクリアした。合計スコアは_SCORE_点だ。", background: @background_stone, speaker_image: @player_image, text_speed: @yomiage_speed, sound_content: "text_beep", await_input: true },
-      { type: :game, class: PKGame, name: :pk },
-
-      { type: :dialogue, content: "神経衰弱の試練もクリアした。合計スコアは_SCORE_点だ。", background: @background_stone, speaker_image: @player_image, text_speed: @yomiage_speed, sound_content: "text_beep", await_input: true },
+      { type: :dialogue, content: "合計スコアは_SCORE_点でした。また遊んでね", background: @background_school, speaker_image: @player_image, text_speed: @yomiage_speed, sound_content: "text_beep", await_input: true },
       # エンディング
-      { type: :dialogue, content: "すべての試練を突破した。\nこれで終わりだ。", background: @background_stone, speaker_image: @player_image, text_speed: @yomiage_speed, sound_content: "text_beep", await_input: true }
     ]
     @current_event_index = 0
 
