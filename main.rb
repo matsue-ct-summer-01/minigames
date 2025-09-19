@@ -57,7 +57,7 @@ class GameManager < Gosu::Window
       { type: :dialogue, content: "(おい、そこのお前....)", background: @background_school, speaker_image: @player_image, text_speed: @yomiage_speed, sound_content: "text_beep", await_input: true },
       { type: :dialogue, content: "うわ!急に頭から謎の声が!!", background: @background_school, speaker_image: @player_image, text_speed: @yomiage_speed, sound_content: "text_beep", await_input: true },
       { type: :sound, data: "keen" },
-      { type: :dialogue, content: "(私は理想の高専生が具現化した神である)", background: @background_school, speaker_image: @player_image, text_speed: @yomiage_speed, sound_content: "text_beep", await_input: true },
+      { type: :dialogue, content: "(私は理想の高専生である)", background: @background_school, speaker_image: @player_image, text_speed: @yomiage_speed, sound_content: "text_beep", await_input: true },
       { type: :sound, data: "long_keen" },
       { type: :dialogue, content: "(お前は怠惰すぎる、高専の恥だ)\n(そんなお前に4つの試練を用意した。これらを乗り越えることでお前は成長できるだろう)", background: @background_school, speaker_image: @player_image, text_speed: @yomiage_speed, sound_content: "text_beep", await_input: true },
       { type: :dialogue, content: "まじか！", background: @background_school, speaker_image: @player_image, text_speed: @yomiage_speed, sound_content: "text_beep", await_input: true },
