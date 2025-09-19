@@ -145,7 +145,7 @@ end
     attr_reader :falling, :alive
 
     def initialize(col, y, falling = true)
-      @col = col
+      @col = col#列数
       @size = BLOCK_SIZE#ブロックサイズ
       @x = col * BLOCK_SIZE
       @y = y
@@ -159,13 +159,13 @@ end
     def update(landed_heights, landed_blocks, enemy_bullets)
       # 落下処理
       if @falling
-        target_bottom = ShootingGame::WINDOW_HEIGHT - landed_heights[@col]
-        if @y + @size + @fall_speed >= target_bottom
-          @y = target_bottom - @size
-          @falling = false
-          @row = landed_heights[@col] / BLOCK_SIZE
-          landed_blocks[@col] << self
-          landed_heights[@col] += BLOCK_SIZE
+        target_bottom = ShootingGame::WINDOW_HEIGHT - landed_heights[@col]#積んだブロックの上端
+        if @y + @size + @fall_speed >= target_bottom#落ちてくるブロックが積まれたブロックに達したら
+          @y = target_bottom - @size#落ちてくるブロックの下端を積まれたブロックの上に合わせる
+          @falling = false#落下中フラグをfalseに
+          @row = landed_heights[@col] / BLOCK_SIZE#何個積んであるかを計算
+          landed_blocks[@col] << self#自分を列に追加
+          landed_heights[@col] += BLOCK_SIZE#積まれたブロックの上端の高さ更新
         else
           @y += @fall_speed
         end
