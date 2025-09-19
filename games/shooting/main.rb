@@ -5,16 +5,16 @@ require 'gosu'
 # ▼ ShootingGame クラス
 # -----------------------------
 class ShootingGame
-  WINDOW_WIDTH  = 640
+  WINDOW_WIDTH  = 640#ウィンドウサイズ
   WINDOW_HEIGHT = 480
 
-  BLOCK_SIZE = 80
-  COLUMNS = WINDOW_WIDTH / BLOCK_SIZE
-  SPAWN_INTERVAL = 60
-  FALL_SPEED = 2.5
-  BULLET_SPEED = 8
-  PLAYER_SPEED = 5.5
-  PLAYER_SPEED_SHIFT = 3.0
+  BLOCK_SIZE = 80#ブロックの大きさ
+  COLUMNS = WINDOW_WIDTH / BLOCK_SIZE#ブロック列数
+  SPAWN_INTERVAL = 60#ブロック生成間隔(1sあたり1個)
+  FALL_SPEED = 2.5#おちてくる速さの初期値
+  BULLET_SPEED = 8#プレイヤー弾の速さ
+  PLAYER_SPEED = 5.5#プレイヤーの移動速度
+  PLAYER_SPEED_SHIFT = 3.0#SHIFT押下時のプレイヤー移動速度
 
   def self.window_size
     { width: WINDOW_WIDTH, height: WINDOW_HEIGHT }
@@ -28,11 +28,12 @@ class ShootingGame
       @h = 20
       @x = WINDOW_WIDTH / 2 - @w / 2#初期座標
       @y = WINDOW_HEIGHT - @h - 10
-      @cooldown = 0
+      @cooldown = 0#弾の連射防止用
       @image = Gosu::Image.new("assets/images/player.png", retro: true) 
     end
 
     def update
+      #移動（矢印かWASDで移動、SHIFTを押している間は移動速度が遅くなる）
       if !Gosu.button_down?(Gosu::KB_LEFT_SHIFT)
           @x -= PLAYER_SPEED if Gosu.button_down?(Gosu::KB_LEFT) || Gosu.button_down?(Gosu::KB_A)
           @x += PLAYER_SPEED if Gosu.button_down?(Gosu::KB_RIGHT) || Gosu.button_down?(Gosu::KB_D)
@@ -45,17 +46,17 @@ class ShootingGame
           @y += PLAYER_SPEED_SHIFT if Gosu.button_down?(Gosu::KB_DOWN) || Gosu.button_down?(Gosu::KB_S)
       end
 
-      
+      #画面外にでないように座標を戻す
       @x = [[@x, 0].max, WINDOW_WIDTH - @w].min
       @y = [[@y, 0].max, WINDOW_HEIGHT - @h].min
-      @cooldown -= 1 if @cooldown > 0
+      @cooldown -= 1 if @cooldown > 0#クールダウン(弾の間隔)をデクリメント(ただし0以下にはならないように)
     end
 
     def draw(window)
       #window.draw_rect(@x, @y, @w, @h, Gosu::Color.rgba(80, 160, 255, 255), 1)
       #window.draw_rect(@x + 8, @y + 8, @w - 16, @h - 16, Gosu::Color.rgba(30, 30, 30, 255), 2)
   
-      # 20x20 に縮小して描画
+      # 20x20 に縮小して描画　@w@hの値に縮小される
       @image.draw_as_quad(
         @x,         @y,          Gosu::Color::WHITE,
         @x + @w,    @y,          Gosu::Color::WHITE,
@@ -67,15 +68,15 @@ class ShootingGame
     end
 
     def shoot
-      return nil if @cooldown > 0
-      @cooldown = 12
-      bx = @x + @w / 2 - 4
+      return nil if @cooldown > 0#クールダウンが0じゃないと撃てない
+      @cooldown = 12#クールダウンを12に(待ち時間)
+      bx = @x + @w / 2 - 4#弾の生成位置を計算、プレイヤーの座標から発射するように
       by = @y - 8
       Bullet.new(bx, by)
     end
 
     def rect
-      [@x, @y, @w, @h]
+      [@x/2, @y/2, @w/2, @h/2]#あたり判定用　画像より小さくして難易度を下げちゃおう！
     end
   end
 
@@ -91,11 +92,11 @@ class ShootingGame
     end
 
     def update
-      @y -= BULLET_SPEED
-      @alive = false if @y + @h < 0
+      @y -= BULLET_SPEED#弾を上に移動
+      @alive = false if @y + @h < 0#画面外に出たらいないよ～って教える
     end
 
-    def draw(window)
+    def draw(window)#弾描画
       window.draw_rect(@x, @y, @w, @h, Gosu::Color.rgba(255, 220, 80, 255), 3)
     end
 
@@ -104,13 +105,13 @@ class ShootingGame
     def rect; [@x, @y, @w, @h]; end
   end
 
-  # ── EnemyBullet ──
+
   # ── EnemyBullet ──
 class EnemyBullet
   attr_reader :x, :y, :w, :h
-  SPEED = 2.5
+  SPEED = 2.5#敵弾の速さ
 
-  def initialize(x, y, angle)
+  def initialize(x, y, angle)#生成場所と角度をうけとる
     @x = x
     @y = y
     @angle = angle
@@ -122,8 +123,8 @@ class EnemyBullet
   end
 
   def update
-    @x += SPEED * Math.cos(@angle)
-    @y += SPEED * Math.sin(@angle)
+    @x += SPEED * Math.cos(@angle)#角度(ラジアン)x方向はcos、y方向はsin
+    @y += SPEED * Math.sin(@angle)#方向とスピードで座標変更
     @alive = false if @x < 0 || @x > ShootingGame::WINDOW_WIDTH || @y < 0 || @y > ShootingGame::WINDOW_HEIGHT
   end
 
@@ -145,14 +146,14 @@ end
 
     def initialize(col, y, falling = true)
       @col = col
-      @size = BLOCK_SIZE
+      @size = BLOCK_SIZE#ブロックサイズ
       @x = col * BLOCK_SIZE
       @y = y
-      @falling = falling
-      @alive = true
-      @color = random_color
-      @fall_speed = FALL_SPEED * rand(0.5..2.0)
-      @shoot_cooldown = rand(60..180)
+      @falling = falling#落下中フラグ
+      @alive = true#画面外にいないか
+      @color = random_color#色
+      @fall_speed = FALL_SPEED * rand(0.5..2.0)#ブロックの落ちる速さ
+      @shoot_cooldown = rand(40..70)#最初に弾を打つまで
     end
 
     def update(landed_heights, landed_blocks, enemy_bullets)
@@ -172,26 +173,26 @@ end
 
       # 全方位弾
       @shoot_cooldown -= 1
-      if @shoot_cooldown <= 0
+      if @shoot_cooldown <= 0#クールダウンが0なら敵弾を撃つ
         shots = 16
-        shots.times do |i|
+        shots.times do |i|#弾を16方向(shotで変更可)均等に生成
           angle = 2 * Math::PI * i / shots
           enemy_bullets << EnemyBullet.new(@x + @size / 2, @y + @size / 2, angle)
         end
-        @shoot_cooldown = rand(300..400)
+        @shoot_cooldown = rand(500..700)#次の敵弾発射まで
       end
     end
 
-    def draw(window)
-      window.draw_rect(@x + 1, @y + 1, @size - 2, @size - 2, @color, 1)
-    end
+    #def draw(window)
+    #  window.draw_rect(@x + 1, @y + 1, @size - 2, @size - 2, @color, 1)
+    #end
 
     def destroy; @alive = false; end
     def alive?; @alive; end
     def rect; [@x, @y, @size, @size]; end
 
     private
-    def random_color
+    def random_color#色ランダムに
       Gosu::Color.argb(0xff_000000 | (rand(0xFFFFFF)))
     end
   end
@@ -199,13 +200,13 @@ end
   # ── ShootingGame インスタンス
   def initialize(parent)
     
-    @parent = parent
+    @parent = parent#on_game_overコールバック用
     @player = Player.new
     @bullets = []
     @enemy_bullets = []
     @falling_blocks = []
-    @landed_blocks = Array.new(COLUMNS) { [] }
-    @landed_heights = Array.new(COLUMNS, 0)
+    @landed_blocks = Array.new(COLUMNS) { [] }#各列の配列
+    @landed_heights = Array.new(COLUMNS, 0)#列ごとの積み高さ
     @spawn_timer = 0
     @score = 0
     @game_over = false
@@ -222,7 +223,7 @@ end
 
   # ── プレイヤー更新 ──
   @player.update
-  if Gosu.button_down?(Gosu::KB_RETURN)
+  if Gosu.button_down?(Gosu::KB_Z)#Z押したら弾打てる
    b = @player.shoot
    @shot_sound.play
    @bullets << b if b
@@ -282,12 +283,13 @@ end
     window = @parent
 
     window.draw_rect(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT, Gosu::Color.rgba(10, 10, 20, 255), 0)
-    (0..COLUMNS).each do |c|
+    (0..COLUMNS).each do |c|#背景ぬりつぶし黒
       x = c * BLOCK_SIZE
-      Gosu.draw_line(x, 0, Gosu::Color.argb(0xFF202020),
+      Gosu.draw_line(x, 0, Gosu::Color.argb(0xFF202020),#背景グリッド線
                       x, WINDOW_HEIGHT, Gosu::Color.argb(0xFF202020), 0)
     end
 
+    #色々描画　積み上がったブロック→落下ブロック→弾→プレイヤーの順
     @landed_blocks.each { |col| col.each { |blk| blk.draw(window) } }
     @falling_blocks.each { |blk| blk.draw(window) }
     @bullets.each { |b| b.draw(window) }
@@ -295,8 +297,9 @@ end
     @player.draw(window)
 
     font = Gosu::Font.new(20)
+    #スコア表示
     font.draw_text("Score: #{@score}", 10, 8, 10, 1.0, 1.0, Gosu::Color::YELLOW)
-    if @game_over
+    if @game_over#ゲームオーバー時の挙動
         @parent.on_game_over(@score) # 親のメソッドを呼び出す
       #font.draw_text("GAME OVER", WINDOW_WIDTH / 2 - 90, WINDOW_HEIGHT / 2 - 20, 20, 1.5, 1.5, Gosu::Color::RED)
       #font.draw_text("Press R to Restart", WINDOW_WIDTH / 2 - 110, WINDOW_HEIGHT / 2 + 20, 20, 1.0, 1.0, Gosu::Color::WHITE)
@@ -335,6 +338,7 @@ end
 
   private
 
+  #あたり判定のみんな
   def collide_rect?(a, b)
     ax, ay, aw, ah = a
     bx, by, bw, bh = b
