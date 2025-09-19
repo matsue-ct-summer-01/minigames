@@ -5,18 +5,11 @@ require 'gosu'
 # ====================
 # カードクラスの定義
 # ====================
-# Cardクラスは、ゲーム内の「カード」というオブジェクトの設計図です。
+# このクラスは、ゲーム内の「カード」というオブジェクトの設計図です。
 # 1枚のカードが持つべき情報（絵柄、位置など）や、動作（めくる、描画するなど）を定義します。
 class Card
   # attr_readerは、外部からインスタンス変数を読み取れるようにするRubyの機能です。
   # 例えば、card.valueと書くと、@valueの値を取得できます。
-  # @value: カードの絵柄を識別するための番号（1〜8）
-  # @x, @y: 画面上のカードの左上の座標
-  # @size: カードの一辺の長さ（正方形）
-  # @is_flipped: カードがめくられているかどうかの真偽値
-  # @is_matched: カードがペアとして確定しているかどうかの真偽値
-  # @id: カードの識別番号（配列内のインデックス、AIが記憶するために使う）
-  # @image: カードの表面に表示する画像データ
   attr_reader :value, :x, :y, :size, :is_flipped, :is_matched, :id, :image
 
   # initializeメソッドは、新しいCardオブジェクトが作られたときに呼ばれます。
@@ -53,27 +46,24 @@ class Card
   end
 
   # カードを画面に描画するメソッドです。
-  # back_imageという引数を受け取り、これをカードの裏面として使います。
-  def draw(back_image)
-    # カードがめくられているか、ペアになっているかを確認します。
+  # このコードでは、カードの裏面を単色の四角形で描画します。
+  def draw(font)
+    # カードがめくられているかによって、カードの色を白（めくられた状態）か灰色（裏面）に設定します。
+    color = @is_flipped ? Gosu::Color::WHITE : Gosu::Color::GRAY
+    # 指定した色とサイズで、カードの土台となる四角形を描画します。
+    Gosu.draw_rect(@x, @y, @size, @size, color)
+    # 内側に、黒い縁取りの四角形を描画します。
+    Gosu.draw_rect(@x + 2, @y + 2, @size - 4, @size - 4, Gosu::Color::BLACK)
+
+    # カードがめくられている、またはペアが成立している場合にのみ、中の画像を描画します。
     if @is_flipped || @is_matched
-      # --- 表の画像を描画する部分 ---
       # 画像がカードの枠内に収まるように、画像のサイズを計算します。
       image_scale_x = (@size - 4) / @image.width.to_f
       image_scale_y = (@size - 4) / @image.height.to_f
       # Gosuのdrawメソッドを使って、計算したサイズで画像を描画します。
       # 座標はカードの枠の内側（+2, +2）に調整しています。
       @image.draw(@x + 2, @y + 2, 0, image_scale_x, image_scale_y)
-    else
-      # --- 裏面の画像を描画する部分 ---
-      # カードがめくられていない場合、裏面画像を描画します。
-      # 裏面画像も同様にサイズを計算して描画します。
-      back_image_scale_x = (@size - 4) / back_image.width.to_f
-      back_image_scale_y = (@size - 4) / back_image.height.to_f
-      back_image.draw(@x + 2, @y + 2, 0, back_image_scale_x, back_image_scale_y)
     end
-    # カードの外枠を黒い四角形で描画します。
-    Gosu.draw_rect(@x, @y, @size, @size, Gosu::Color::BLACK)
   end
 
   # マウスの座標がこのカードの範囲内にあるか（クリックされたか）を判定するメソッドです。
@@ -113,8 +103,6 @@ class MemoryGame < Gosu::Window
 
     # 背景画像を読み込み、インスタンス変数に格納します。
     @background_image = Gosu::Image.new("C:\\ruby_lecture\\code\\minigames\\images\\haikei.jpg")
-    # カードの裏面画像を読み込みます。
-    @card_back_image = Gosu::Image.new("C:\\ruby_lecture\\code\\minigames\\images\\cardback.jpg")
 
     # カード表面に使う画像のファイルパスを配列にまとめます。
     image_paths = [
@@ -131,8 +119,8 @@ class MemoryGame < Gosu::Window
     # mapメソッドを使って、各ファイルパスからGosu::Imageオブジェクトを作成し、@imagesに格納します。
     @images = image_paths.map { |path| Gosu::Image.new(path) }
 
-    # BGMと効果音を読み込みます。
-    # Gosu::Songは長い音楽用、Gosu::Sampleは短い効果音用です。
+    # === 効果音の追加 ===
+    # Gosu::Sampleは短い効果音用です。
     @bgm = Gosu::Song.new("C:\\ruby_lecture\\code\\minigames\\sounds\\bgm.wav")
     @flip_sound = Gosu::Sample.new("C:\\ruby_lecture\\code\\minigames\\sounds\\flip.wav")
     @match_sound_1 = Gosu::Sample.new("C:\\ruby_lecture\\code\\minigames\\sounds\\match1.wav")
@@ -141,8 +129,7 @@ class MemoryGame < Gosu::Window
     
     # setup_boardメソッドを呼び出して、カードを配置します。
     setup_board
-    # BGMの再生を開始します。引数trueでループ再生になります。
-    @bgm.play(true)
+    @bgm.play(true) # trueでループ再生
   end
 
   # ゲームボードをセットアップするメソッドです。
@@ -187,19 +174,19 @@ class MemoryGame < Gosu::Window
     @background_image.draw(0, 0, 0, scale_x, scale_y)
     
     # すべてのカードのdrawメソッドを呼び出して描画します。
-    # ここで裏面画像（@card_back_image）を引数として渡しています。
-    @cards.each { |card| card.draw(@card_back_image) }
+    # このコードでは、引数としてフォント（@message_font）を渡しています。
+    @cards.each { |card| card.draw(@message_font) }
     
     # スコアとメッセージを画面に描画します。
-    @message_font.draw_text("現在のスコア: #{@player_score}点", 10, 10, 0, 1.0, 1.0, Gosu::Color::YELLOW)
+    @message_font.draw_text("現在のスコア: #{@player_score}点", 10, 10, 0, 1.0, 1.0, Gosu::Color::BLACK)
     
     # ゲーム終了時のメッセージ
     if @game_over
       win_message = "ゲーム終了！"
-      @message_font.draw_text(win_message, 10, 430, 0, 1.0, 1.0, Gosu::Color::YELLOW)
-      @message_font.draw_text("最終スコア: #{@player_score}点", 10, 450, 0, 1.0, 1.0, Gosu::Color::YELLOW)
+      @message_font.draw_text(win_message, 10, 430, 0, 1.0, 1.0, Gosu::Color::BLACK)
+      @message_font.draw_text("最終スコア: #{@player_score}点", 10, 450, 0, 1.0, 1.0, Gosu::Color::BLACK)
     else
-      @message_font.draw_text(@message, 10, 450, 0, 1.0, 1.0, Gosu::Color::YELLOW)
+      @message_font.draw_text(@message, 10, 450, 0, 1.0, 1.0, Gosu::Color::BLACK)
     end
   end
 
@@ -242,7 +229,7 @@ class MemoryGame < Gosu::Window
     if @flipped_cards.empty?
       @ai_action = find_card_to_flip # めくるカードをAIに探させます
       flip_card(@ai_action[0]) # 1枚目をめくります
-      @message = "コンピュータがめくったカード: #{@flipped_cards[0].value}"
+      #@message = "コンピュータがめくったカード: #{@flipped_cards[0].value}" # メッセージはプレイヤー用なのでコメントアウト
       @timer = Gosu::milliseconds
       return
     end
@@ -250,7 +237,7 @@ class MemoryGame < Gosu::Window
     # 2枚目をめくる
     if @flipped_cards.size == 1 && Gosu.milliseconds - @timer > 1000
       flip_card(@ai_action[1]) # 2枚目をめくります
-      @message = "コンピュータがめくったカード: #{@flipped_cards[0].value} と #{@flipped_cards[1].value}"
+      #@message = "コンピュータがめくったカード: #{@flipped_cards[0].value} と #{@flipped_cards[1].value}" # メッセージはプレイヤー用なのでコメントアウト
       @timer = Gosu::milliseconds
     end
   end
@@ -327,11 +314,11 @@ class MemoryGame < Gosu::Window
         flip_card(card) # カードをめくります
         
         if @flipped_cards.size == 1 # 1枚目がめくられた時
-            @message = "あなたがめくったカード: #{card.value}"
+            #@message = "あなたがめくったカード: #{card.value}" # メッセージは他の部分で制御しているためコメントアウト
         elsif @flipped_cards.size == 2 # 2枚目がめくられた時
             @timer = Gosu::milliseconds # タイマーを開始
             card1, card2 = @flipped_cards
-            @message = "あなたがめくったカード: #{card1.value} と #{card2.value}"
+            #@message = "あなたがめくったカード: #{card1.value} と #{card2.value}" # メッセージは他の部分で制御しているためコメントアウト
         end
         break # 1枚見つかったらループを抜けます
       end
