@@ -51,7 +51,7 @@ class TetrisGame
 
   def update
   # ゲームオーバー状態になった瞬間、一度だけ親に通知し、BGMを止める
-  if @game_over && !@notified_parent
+  if @game_overon&& !@notified_parent
     @bgm.stop
     @window.on_game_over(@score)
     @notified_parent = true
@@ -121,7 +121,7 @@ end
   def draw_instructions
     text = "操作方法:\n\n←, → : 移動\n↓ : 加速\n↑ : 右回転\nZ, X : 左回転\n\nスコア: #{@score}"
     @font.draw_text(text, @board_width * @block_size + 20, 50, ZOrder::UI, 1.0, 1.0, Gosu::Color::WHITE)
-  end
+  
 
   def new_tetromino
     type = TETROMINOES.keys.sample

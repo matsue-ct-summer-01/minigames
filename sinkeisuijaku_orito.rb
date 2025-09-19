@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 require 'gosu'
 
 class Card
@@ -47,11 +48,18 @@ class Card
   end
 end
 
-class MemoryGame < Gosu::Window
-  def initialize
-    super(640, 480)
-    self.caption = "神経衰弱"
 
+class MemoryGame
+
+
+  def self.window_size
+    { width: 450, height: 480 }
+  end
+  def initialize(window)
+    @window = window
+    #@window.caption = "神経衰弱"
+
+   
     @cards = []
     @flipped_cards = []
     @matched_pairs = 0
@@ -66,7 +74,7 @@ class MemoryGame < Gosu::Window
     @ai_action = nil
     
     @card_size = 90
-    @message_font = Gosu::Font.new(self, "Arial", 20)
+    @message_font = Gosu::Font.new(@window, "Arial", 20)
     
     # 背景画像を読み込む
     @background_image = Gosu::Image.new("C:\\ruby_lecture\\code\\minigames\\images\\haikei.jpg")
@@ -102,8 +110,8 @@ class MemoryGame < Gosu::Window
     values.shuffle!
     padding = 10
     
-    start_x = (self.width - (4 * (@card_size + padding))) / 2
-    start_y = (self.height - (4 * (@card_size + padding))) / 2
+    start_x = (@window.width - (4 * (@card_size + padding))) / 2
+    start_y = (@window.height - (4 * (@card_size + padding))) / 2
     
     (0..3).each do |row|
       (0..3).each do |col|
@@ -129,8 +137,8 @@ class MemoryGame < Gosu::Window
 
   def draw
     # 背景画像を描画
-    scale_x = self.width.to_f / @background_image.width
-    scale_y = self.height.to_f / @background_image.height
+    scale_x = @window.width.to_f / @background_image.width
+    scale_y = @window.height.to_f / @background_image.height
     @background_image.draw(0, 0, 0, scale_x, scale_y)
     
     # カードやスコアなどの描画はここから
@@ -142,6 +150,7 @@ class MemoryGame < Gosu::Window
       win_message = "ゲーム終了！"
       @message_font.draw_text(win_message, 10, 430, 0, 1.0, 1.0, Gosu::Color::YELLOW)
       @message_font.draw_text("最終スコア: #{@player_score}点", 10, 450, 0, 1.0, 1.0, Gosu::Color::YELLOW)
+      @window.on_game_over(@player_score) # 親のメソッドを呼び出す
     else
       @message_font.draw_text(@message, 10, 450, 0, 1.0, 1.0, Gosu::Color::YELLOW)
     end
@@ -247,7 +256,7 @@ class MemoryGame < Gosu::Window
 
   def button_down(id)
     if @game_over
-      close if id == Gosu::KB_ESCAPE
+      @window.close if id == Gosu::KB_ESCAPE
       return
     end
     
@@ -255,7 +264,8 @@ class MemoryGame < Gosu::Window
     return unless id == Gosu::MS_LEFT
 
     @cards.each do |card|
-      if card.contains?(mouse_x, mouse_y) && !card.is_flipped
+      # mouse_xとmouse_yを@windowから取得するように修正
+      if card.contains?(@window.mouse_x, @window.mouse_y) && !card.is_flipped
         flip_card(card)
         
         if @flipped_cards.size == 1
@@ -291,5 +301,3 @@ class MemoryGame < Gosu::Window
     nil
   end
 end
-
-MemoryGame.new.show
