@@ -76,7 +76,7 @@ class ShootingGame
     end
 
     def rect
-      [@x/2, @y/2, @w/2, @h/2]#あたり判定用　画像より小さくして難易度を下げちゃおう！
+      [@x/2, @y/2, @w/2, @h/2]#あたり判定用　表示画像より小さくして難易度を下げちゃおう！
     end
   end
 
@@ -124,7 +124,7 @@ class EnemyBullet
 
   def update
     @x += SPEED * Math.cos(@angle)#角度(ラジアン)x方向はcos、y方向はsin
-    @y += SPEED * Math.sin(@angle)#方向とスピードで座標変更
+    @y += SPEED * Math.sin(@angle)#方向とスピードでベクトル与える
     @alive = false if @x < 0 || @x > ShootingGame::WINDOW_WIDTH || @y < 0 || @y > ShootingGame::WINDOW_HEIGHT
   end
 
